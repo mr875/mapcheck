@@ -1,9 +1,12 @@
 from mapcomp.lookatmap import LookMap
 
 def main():
-    gen = LookMap()
+    gen = LookMap('coreexome_map')
     gen.test_conn()
-    gen.finish()
+    try:
+        gen.getrows(5)
+    finally:
+        gen.finish()
 
 if __name__ == "__main__":
     main()

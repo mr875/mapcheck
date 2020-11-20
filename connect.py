@@ -44,12 +44,9 @@ class DBConnect:
 
     def resetCursors(self):
         for c in self.cursors:
-            try:
-                c.close()
-            except:
-                print("ERROR detected with cursor")
+            if c.rowcount == 0: # unread result
                 c.fetchall()
-                c.close()
+            c.close()
         self.cursors=[]
 
     def commit(self):
