@@ -1,12 +1,17 @@
 from mapcomp.lookatmap import LookMap
+from mapcomp.ce import CE
+
+class LMCE(LookMap,CE):
+    pass
 
 def main():
-    gen = LookMap('coreexome_map')
-    gen.test_conn()
+    ce = LMCE('coreexome_map')
+    ce.test_conn()
     try:
-        gen.getrows(5)
+        ce.loadcurs_br(limit=5)
+        ce.run_through()
     finally:
-        gen.finish()
+        ce.finish()
 
 if __name__ == "__main__":
     main()

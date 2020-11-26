@@ -1,4 +1,6 @@
+import sys
 from connect import DBConnect
+#from .ce import CE
 
 class LookMap:
 
@@ -9,16 +11,23 @@ class LookMap:
         self.brcurs = self.brconn.getCursor()
         self.omconn = DBConnect("cc4")
         self.omcurs = self.omconn.getCursor()
-        self.tabname = tabname
+        if tabname in self.related_names:
+            self.tabname = tabname
+        else:
+            sys.exit("table name passed is '%s' but this name is not recognised for class '%s'" % (tabname,self.__class__.__name__))
 
-    def getrows(self,limit=None):
+    def loadcurs_br(self,limit=None):
         q = 'SELECT '
         for col in self.tabcols[self.tabname]:
             q = q + col + ', '
         q = q[:-2] + ' FROM ' + self.tabname
         if limit:
             q = q + ' LIMIT ' + str(limit)
-        print(q)
+        self.brcurs.execute(q)
+
+    def run_through(self):
+        for row in self.brcurs:
+            print(row)
 
     def test_conn(self):
         qbr = 'SELECT * FROM ' + self.tabname + ' LIMIT 5'
