@@ -2,16 +2,20 @@ from mapcomp.lookatmap import LookMap
 from mapcomp.ce import CE
 
 class LMCE(LookMap,CE):
-    pass
+
+    def run(self):
+        self.connectomics('cc4')
+        self.connectbr()
+        self.test_conn()
+        try:
+            self.loadcurs_br(limit=5)
+            self.run_through()
+        finally:
+            self.finish()
 
 def main():
-    ce = LMCE('coreexome_map')
-    ce.test_conn()
-    try:
-        ce.loadcurs_br(limit=5)
-        ce.run_through()
-    finally:
-        ce.finish()
+
+    ce = LMCE('coreexome_map').run()
 
 if __name__ == "__main__":
     main()
