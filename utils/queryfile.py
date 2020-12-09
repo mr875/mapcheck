@@ -1,6 +1,6 @@
 import sys
 import os
-from connect import DBConnect
+from .connect import DBConnect
 
 class QueryFile:
 

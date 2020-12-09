@@ -1,5 +1,6 @@
 import sys
 from utils.connect import DBConnect
+from utils.queryfile import QueryFile, NormFile
 #from .ce import CE
 
 class LookMap:
@@ -30,18 +31,24 @@ class LookMap:
         self.omconn = DBConnect(omics)
         self.omcurs = self.omconn.getCursor()
 
-    def loadcurs_br(self,limit=None):
+    def make_q(self,limit=None):
         q = 'SELECT '
         for col in self.tabcols[self.tabname]:
             q = q + col + ', '
         q = q[:-2] + ' FROM ' + self.tabname
         if limit:
             q = q + ' LIMIT ' + str(limit)
-        self.brcurs.execute(q)
+        return q
 
-    def run_through(self):
+    def run_through(self,limit=None):
+        self.brcurs.execute(self.make_q(limit))
         for row in self.brcurs:
             print(row)
+
+    def make_file(self,dbname="br",limit=None):
+        fname = 'out_' + self.tabname + '.txt'
+        q = self.make_q(limit)
+        f = QueryFile(fname,q,(),dbname)
 
     def test_conn(self):
         if not self.brcurs or not self.omcurs:
