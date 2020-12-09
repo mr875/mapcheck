@@ -5,16 +5,30 @@ from connect import DBConnect
 class LookMap:
 
     tabcols = {'coreexome_map':['snp','dbsnpid','chr']}
+    brconn = None
+    brcurs = None
+    omconn = None
+    omcurs = None
 
     def __init__(self,tabname):
-        self.brconn = DBConnect("br")
-        self.brcurs = self.brconn.getCursor()
-        self.omconn = DBConnect("cc4")
-        self.omcurs = self.omconn.getCursor()
         if tabname in self.related_names:
             self.tabname = tabname
         else:
             sys.exit("table name passed is '%s' but this name is not recognised for class '%s'" % (tabname,self.__class__.__name__))
+
+    def connectbr(self,br="br"):
+        if self.brconn:
+            print("won't run %s.connectbr() because an existing connection already detected" % (self.__class__.__name__))
+            return
+        self.brconn = DBConnect(br)
+        self.brcurs = self.brconn.getCursor()
+
+    def connectomics(self,omics="omics"):
+        if self.omconn:
+            print("won't run %s.connectomics() because an existing connection already detected" % (self.__class__.__name__))
+            return
+        self.omconn = DBConnect(omics)
+        self.omcurs = self.omconn.getCursor()
 
     def loadcurs_br(self,limit=None):
         q = 'SELECT '
@@ -30,6 +44,9 @@ class LookMap:
             print(row)
 
     def test_conn(self):
+        if not self.brcurs or not self.omcurs:
+            print("activate db connections before running %s.test_conn()" % (self.__class__.__name__))
+            return
         qbr = 'SELECT * FROM ' + self.tabname + ' LIMIT 5'
         qom = 'SELECT * FROM flank LIMIT 3'
         try:
@@ -44,6 +61,8 @@ class LookMap:
         #print(resultom)
 
     def finish(self):
-        self.brconn.close()
-        self.omconn.close()
+        if self.brconn:
+            self.brconn.close()
+        if self.omconn:
+            self.omconn.close()
         
