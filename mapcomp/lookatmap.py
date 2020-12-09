@@ -1,5 +1,5 @@
 import sys
-from connect import DBConnect
+from utils.connect import DBConnect
 #from .ce import CE
 
 class LookMap:
