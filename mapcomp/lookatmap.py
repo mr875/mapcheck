@@ -10,12 +10,18 @@ class LookMap:
     brcurs = None
     omconn = None
     omcurs = None
+    qf = None #for QueryFile instance
 
     def __init__(self,tabname):
         if tabname in self.related_names:
             self.tabname = tabname
+            self.fname = 'out_' + self.tabname + '.txt'
         else:
             sys.exit("table name passed is '%s' but this name is not recognised for class '%s'" % (tabname,self.__class__.__name__))
+
+    def table_dump(self,br="br",limit=None):
+        self.make_file(br,limit)
+        print("length of %s: %s" % (self.fname,self.qf.row_count))
 
     def connectbr(self,br="br"):
         if self.brconn:
@@ -32,7 +38,7 @@ class LookMap:
         self.omcurs = self.omconn.getCursor()
 
     def make_q(self,limit=None):
-        q = 'SELECT '
+        q = 'SELECT DISTINCT '
         for col in self.tabcols[self.tabname]:
             q = q + col + ', '
         q = q[:-2] + ' FROM ' + self.tabname
@@ -46,9 +52,15 @@ class LookMap:
             print(row)
 
     def make_file(self,dbname="br",limit=None):
-        fname = 'out_' + self.tabname + '.txt'
         q = self.make_q(limit)
-        f = QueryFile(fname,q,(),dbname)
+        self.qf = QueryFile(self.fname,q,(),dbname)
+
+    def add_file(self):
+        if self.qf:
+            print("won't run %s.add_file() because a file is already in play" % (self.__class__.__name__))
+            return
+        self.qf = NormFile(self.fname)
+        print("length of %s: %s" % (self.fname,self.qf.row_count))
 
     def test_conn(self):
         if not self.brcurs or not self.omcurs:
@@ -73,3 +85,19 @@ class LookMap:
         if self.omconn:
             self.omconn.close()
         
+    def step(self,omics="omics",start=1,finish=None):
+        self.connectomics(omics)
+        counter = 0
+        try:
+            if not finish:
+                finish = self.qf.row_count
+            for line in self.qf.readls():
+                counter += 1
+                if counter < start:
+                    continue
+                if counter == (finish + 1):
+                    break
+                print(line)
+        finally:
+            self.finish()
+
