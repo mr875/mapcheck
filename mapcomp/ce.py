@@ -4,6 +4,7 @@ from .compomics import CompOmics
 class CE(MapTable,CompOmics):
     
     tabcols = {'coreexome_map':['snp','dbsnpid','chr']}
+    relvds = {'coreexome_map': [170,171,232]}
 
     def getcols(self,arr):
         uid = arr[1]

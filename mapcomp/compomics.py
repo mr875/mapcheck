@@ -12,9 +12,25 @@ class CompOmics:
                     continue
                 if counter == (finish + 1):
                     break
+                print(line)
                 self.tree(*self.getcols(line))
         finally:
             self.finish()
 
+    def uid_proc(self,uid):
+        print("'%s' found" % (uid))
+
     def tree(self,uid,suid,chrm,pos):
-        print(uid)
+        q = 'SELECT EXISTS (SELECT * FROM consensus WHERE id = %s)'
+        vals = (uid,)
+        self.omcurs.execute(q,vals) 
+        if self.omcurs.fetchone()[0]:
+            self.uid_proc(uid)
+            return
+        if suid:
+            vals = (suid,)
+            self.omcurs.execute(q,vals) 
+            if self.omcurs.fetchone()[0]:
+                self.uid_proc(suid)
+                return
+

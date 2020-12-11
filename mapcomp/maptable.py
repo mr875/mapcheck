@@ -1,7 +1,6 @@
 import sys
 from utils.connect import DBConnect
 from utils.queryfile import QueryFile, NormFile
-#from .ce import CE
 
 class MapTable:
 
