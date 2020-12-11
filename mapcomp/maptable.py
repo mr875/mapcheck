@@ -3,9 +3,8 @@ from utils.connect import DBConnect
 from utils.queryfile import QueryFile, NormFile
 #from .ce import CE
 
-class LookMap:
+class MapTable:
 
-    tabcols = {'coreexome_map':['snp','dbsnpid','chr']}
     brconn = None
     brcurs = None
     omconn = None
@@ -13,7 +12,7 @@ class LookMap:
     qf = None #for QueryFile instance
 
     def __init__(self,tabname):
-        if tabname in self.related_names:
+        if tabname in self.tabcols:
             self.tabname = tabname
             self.fname = 'out_' + self.tabname + '.txt'
         else:
@@ -85,19 +84,4 @@ class LookMap:
         if self.omconn:
             self.omconn.close()
         
-    def step(self,omics="omics",start=1,finish=None):
-        self.connectomics(omics)
-        counter = 0
-        try:
-            if not finish:
-                finish = self.qf.row_count
-            for line in self.qf.readls():
-                counter += 1
-                if counter < start:
-                    continue
-                if counter == (finish + 1):
-                    break
-                print(line)
-        finally:
-            self.finish()
 

@@ -1,25 +1,12 @@
-from mapcomp.lookatmap import LookMap
+#from mapcomp.maptable import MapTable
 from mapcomp.ce import CE
-
-class LMCE(LookMap,CE):
-
-    def run(self):
-        try:
-#            self.connectomics('cc4')
-            self.connectbr()
-#            self.test_conn()
-            self.make_file(limit=5)
-#            self.add_file()
-#            self.run_through(limit=5)
-        finally:
-            self.finish()
 
 def main():
 
     #ce = LMCE('coreexome_map').table_dump() 
-    ce = LMCE('coreexome_map')
+    ce = CE('coreexome_map')
     ce.add_file() # if file is present already (to avoid running table_dump() every time during development)
-    ce.step('cc4',553947)
+    ce.step('cc4',0,5)
 
 if __name__ == "__main__":
     main()
