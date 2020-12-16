@@ -14,7 +14,8 @@ class OutFiles:
                 os.makedirs(self.path)
 
     def new(self,name):
-        f = open(name,'w') # usage: f.write('text')
+        fullname = self.path + '/' + name
+        f = open(fullname,'w') # usage: f.write('text')
         self.fileobs.append(f)
         return f
 

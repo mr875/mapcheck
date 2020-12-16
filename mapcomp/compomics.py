@@ -6,7 +6,13 @@ class CompOmics:
 
     of = OutFiles('out_files')
 
+    def output_setup(self):
+        self.new_alt_rs = self.of.new(self.tabname + '_new_alt_rs.txt')
+        self.new_rs = self.of.new(self.tabname + '_new_rs.txt')
+        self.rsomics = self.of.new(self.tabname + '_rs_from_omics.txt')
+
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
+        self.output_setup()
         self.connectomics(omics)
         counter = 0
         seconds = int(time.time())
@@ -33,9 +39,30 @@ class CompOmics:
         now = int(time.time() - seconds)
         print("got to end, %s seconds" % (now))
 
-    def uid_proc(self,uid):
-        pass
-        #print("'%s' found" % (uid))
+    def uid_proc(self,uid,chrm,pos,ori_uid=None): # if ori_uid is used it means that uid is from omics db (via alt_ids table)
+        if ori_uid:
+            if self.isnewrs(uid,ori_uid):
+                self.rsomics.write('mapfile id: %s\tomics db id: %s\n' % (ori_uid,uid))
+        else:
+            ori_uid = uid
+        return
+        q = 'SELECT CONCAT(chr,":",pos),build,datasource,chosen FROM positions WHERE id = %s'
+        vals = (uid,)
+        self.omcurs.execute(q,vals)
+        rows = self.omcurs.fetchall()
+        chrpos = [row[0] for row in rows]
+        build =  [row[1] for row in rows]
+        ds =  [row[2] for row in rows]
+        chosen =  [row[3] for row in rows]
+        for ind,cp in enumerate(chrpos):
+            strrow = [str(c) for c in rows[ind]]
+            if cp != (chrm + ':' + pos):
+                if build[ind] == '37':
+                    continue
+                if chrm + ':' + pos == '0:0':
+                    print('positions available for %s 0:0\t%s' % (ori_uid,','.join(strrow)))
+                    continue
+                print('chrpos mismatch for', uid, chrm + ':' + pos,'\t',','.join(strrow))
 
     def fetchone(self,val,q):
         vals = (val,)
@@ -65,34 +92,34 @@ class CompOmics:
     def tree(self,uid,suid,chrm,pos,alts):
         q = 'SELECT EXISTS (SELECT * FROM consensus WHERE id = %s)'
         if self.fetchone(uid,q):
-            self.uid_proc(uid)
+            self.uid_proc(uid,chrm,pos)
             return
         if alts:
             for altrs in alts:
                 if self.fetchone(altrs,q):
-                    self.uid_proc(altrs)
+                    self.uid_proc(altrs,chrm,pos)
                     return
         if suid:
             if self.fetchone(suid,q):
                 if self.isnewrs(uid,suid): 
-                    print("not in consensus (uid): %s\tin consensus (suid): %s" % (uid,suid))
-                self.uid_proc(suid)
+                    self.new_rs.write("not in consensus (uid): %s\tin consensus (suid): %s\n" % (uid,suid)) 
+                self.uid_proc(suid,chrm,pos)
                 return
         diffmain = self.checkalt(uid)
         if diffmain:
-            self.uid_proc(diffmain)
+            self.uid_proc(diffmain,chrm,pos,uid)
             return
         if alts:
             for altrs in alts:
                 diffmain = self.checkalt(altrs)
                 if diffmain:
-                    self.uid_proc(diffmain)
+                    self.uid_proc(diffmain,chrm,pos,uid)
                     return
         diffmain = self.checkalt(suid)
         if diffmain:
             if self.isnewrs(uid,suid):
-                print('not in alt_ids (uid): %s\tin alt_ids (suid): %s\tdb main id: %s' % (uid,suid,diffmain))
-            self.uid_proc(diffmain)
+                self.new_alt_rs.write('not in alt_ids (uid): %s\tin alt_ids (suid): %s\tdb main id: %s\n' % (uid,suid,diffmain))
+            self.uid_proc(diffmain,chrm,pos,uid)
             return
         print("WARNING: not found in consensus or alt_ids: ",uid,suid,chrm,pos)
 
