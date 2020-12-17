@@ -11,6 +11,7 @@ class CompOmics:
         self.new_rs = self.of.new(self.tabname + '_new_rs.txt')
         self.rsomics = self.of.new(self.tabname + '_rs_from_omics.txt')
         self.OOpos = self.of.new(self.tabname + '_pos_for_oo.txt')
+        self.mismatch = self.of.new(self.tabname + '_pos_mismatch.txt')
 
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
         self.output_setup()
@@ -54,17 +55,35 @@ class CompOmics:
         build =  [row[1] for row in rows]
         ds =  [row[2] for row in rows]
         chosen =  [row[3] for row in rows]
-        for ind,cp in enumerate(chrpos):
-            strrow = [str(c) for c in rows[ind]]
-            if cp != (chrm + ':' + pos):
-                if build[ind] == '37':
-                    continue
-                if chrm + ':' + pos == '0:0':
-                    self.OOpos.write('positions available for %s 0:0\t%s\n' % (ori_uid,','.join(strrow)))
-                    continue
-                if chosen[ind] < 0:
-                    print('known chrpos mismatch for %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
-                print('chrpos mismatch for', uid, chrm + ':' + pos,'\t',','.join(strrow))
+        match = False
+        mismatch = False
+        badmatch = False
+        if '38' in build:
+            for ind,cp in enumerate(chrpos):
+                strrow = [str(c) for c in rows[ind]]
+                if cp != (chrm + ':' + pos):
+                    if build[ind] == '37':
+                        continue
+                    if chrm + ':' + pos == '0:0':
+                        self.OOpos.write('positions available for %s 0:0\t%s\n' % (ori_uid,','.join(strrow)))
+                        continue
+                    if chosen[ind] < 0:
+                        print('mismatch on already flagged omics entry: %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
+                        continue
+                    print('mismatch for %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
+                    mismatch = True
+                else: # match
+                    match = True
+                    if chosen[ind] < 0:
+                        print('%s (orig %s) matches flagged entry\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
+                        badmatch = True
+            if not match:
+                print('no match: %s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
+            else:
+                if mismatch: #mismatch happened, but it is already in db
+                    pass
+        else:
+            print('no (b38) position available in omics: %s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
 
     def fetchone(self,val,q):
         vals = (val,)
