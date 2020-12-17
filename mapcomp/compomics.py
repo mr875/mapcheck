@@ -10,6 +10,7 @@ class CompOmics:
         self.new_alt_rs = self.of.new(self.tabname + '_new_alt_rs.txt')
         self.new_rs = self.of.new(self.tabname + '_new_rs.txt')
         self.rsomics = self.of.new(self.tabname + '_rs_from_omics.txt')
+        self.OOpos = self.of.new(self.tabname + '_pos_for_oo.txt')
 
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
         self.output_setup()
@@ -45,7 +46,6 @@ class CompOmics:
                 self.rsomics.write('mapfile id: %s\tomics db id: %s\n' % (ori_uid,uid))
         else:
             ori_uid = uid
-        return
         q = 'SELECT CONCAT(chr,":",pos),build,datasource,chosen FROM positions WHERE id = %s'
         vals = (uid,)
         self.omcurs.execute(q,vals)
@@ -60,8 +60,10 @@ class CompOmics:
                 if build[ind] == '37':
                     continue
                 if chrm + ':' + pos == '0:0':
-                    print('positions available for %s 0:0\t%s' % (ori_uid,','.join(strrow)))
+                    self.OOpos.write('positions available for %s 0:0\t%s\n' % (ori_uid,','.join(strrow)))
                     continue
+                if chosen[ind] < 0:
+                    print('known chrpos mismatch for %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
                 print('chrpos mismatch for', uid, chrm + ':' + pos,'\t',','.join(strrow))
 
     def fetchone(self,val,q):
