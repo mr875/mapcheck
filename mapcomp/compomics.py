@@ -11,7 +11,9 @@ class CompOmics:
         self.new_rs = self.of.new(self.tabname + '_new_rs.txt')
         self.rsomics = self.of.new(self.tabname + '_rs_from_omics.txt')
         self.OOpos = self.of.new(self.tabname + '_pos_for_oo.txt')
-        self.mismatch = self.of.new(self.tabname + '_pos_mismatch.txt')
+        self.new_mismatch = self.of.new(self.tabname + '_new_pos_mismatch.txt')
+        self.no38pos = self.of.new(self.tabname + '_no38pos.txt')
+        self.matchflag = self.of.new(self.tabname + '_matches_flagged.txt')
 
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
         self.output_setup()
@@ -24,15 +26,17 @@ class CompOmics:
             todo = finish - start
             fiveper = int((todo/100)*5)
             fp_increment = fiveper
+            fiveper = fiveper + start
             for line in self.qf.readls():
                 counter += 1
+                #print(counter,fiveper)
                 if counter < start:
                     continue
                 if counter == (finish + 1):
                     break
                 if counter == fiveper:
-                    done = int((fiveper/todo)*100)
-                    print('%s percent of %s (%s) lines parsed' % (done,todo,fiveper))
+                    done = int(((fiveper-start)/(todo))*100)
+                    print('%s percent of %s (%s) lines parsed' % (done,todo,(fiveper-start)))
                     fiveper += fp_increment
                 self.tree(*self.getcols(line))
         finally:
@@ -55,9 +59,10 @@ class CompOmics:
         build =  [row[1] for row in rows]
         ds =  [row[2] for row in rows]
         chosen =  [row[3] for row in rows]
-        match = False
-        mismatch = False
-        badmatch = False
+        match = False # matched against normal db entry
+        match_f = False # matched against flagged db entry
+        mismatch = False # mismatch against normal db entry
+        mismatch_f = False # mismatch against flagged db entry
         if '38' in build:
             for ind,cp in enumerate(chrpos):
                 strrow = [str(c) for c in rows[ind]]
@@ -68,22 +73,26 @@ class CompOmics:
                         self.OOpos.write('positions available for %s 0:0\t%s\n' % (ori_uid,','.join(strrow)))
                         continue
                     if chosen[ind] < 0:
-                        print('mismatch on already flagged omics entry: %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
+                        mismatch_f = True
+                        print('mismatch against already flagged omics entry: %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
                         continue
-                    print('mismatch for %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
                     mismatch = True
                 else: # match
-                    match = True
                     if chosen[ind] < 0:
-                        print('%s (orig %s) matches flagged entry\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
-                        badmatch = True
-            if not match:
-                print('no match: %s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
-            else:
-                if mismatch: #mismatch happened, but it is already in db
-                    pass
+                        self.matchflag.write('%s (orig %s) matches flagged entry\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,','.join(strrow)))
+                        match_f = True
+                    else:
+                        match = True # no report
+            if mismatch:
+                if not match_f: # full mismatch (against everything both flagged and not), 'a new mismatch'
+                    self.new_mismatch.write('mismatch against all b38 db entries\t%s (orig %s)\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,'/'.join(chrpos)))
+                else:
+                    print('mismatch detected, known by db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
+            if mismatch_f:
+                if not match:
+                    print('no match, new to db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
         else:
-            print('no (b38) position available in omics: %s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
+            self.no38pos.write('no (b38) position available in omics:\t%s (orig %s)\t%s:%s\n' % (uid,ori_uid,chrm,pos))
 
     def fetchone(self,val,q):
         vals = (val,)
