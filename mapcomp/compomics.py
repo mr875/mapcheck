@@ -71,27 +71,27 @@ class CompOmics:
                         continue
                     if chrm + ':' + pos == '0:0':
                         self.OOpos.write('positions available for %s 0:0\t%s\n' % (ori_uid,','.join(strrow)))
-                        continue
+                        continue # SCENARIO 1
                     if chosen[ind] < 0:
                         mismatch_f = True
                         print('mismatch against already flagged omics entry: %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
-                        continue
+                        continue # SCENARIO 2 (no report)
                     mismatch = True
                 else: # match
                     if chosen[ind] < 0:
                         self.matchflag.write('%s (orig %s) matches flagged entry\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,','.join(strrow)))
-                        match_f = True
+                        match_f = True # SCENARIO 3
                     else:
-                        match = True # no report
+                        match = True # SCENARIO 4 (no report) 
             if mismatch:
-                if not match_f: # full mismatch (against everything both flagged and not), 'a new mismatch'
+                if not match_f: # full mismatch (against everything both flagged and not), 'a new mismatch' SCENARIO 5
                     self.new_mismatch.write('mismatch against all b38 db entries\t%s (orig %s)\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,'/'.join(chrpos)))
-                else:
+                else: #SCENARIO 6
                     print('mismatch detected, known by db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
             if mismatch_f:
-                if not match:
+                if not match: #SCENARIO 7
                     print('no match, new to db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
-        else:
+        else: #SCENARIO 8
             self.no38pos.write('no (b38) position available in omics:\t%s (orig %s)\t%s:%s\n' % (uid,ori_uid,chrm,pos))
 
     def fetchone(self,val,q):
