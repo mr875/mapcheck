@@ -1,0 +1,23 @@
+Scenario 1, file self.tabname + '_pos_for_oo.txt':
+    Variant has 0:0 for position but the db has a genuine non 0:0 position for this variant if required
+
+Scenario 2:
+    It doesn't mismatches against a db version, but that db version is flagged as possible error so it's better that it does not match it. Nothing to do. If it does not match an incorrect db version then it is likley to match a correct (non flagged) db version instead. If it does not then it comes under Scenario 7 and will have its own associated actions. 
+
+Scenario 3, file self.tabname + '_matches_flagged.txt':
+    Matches db entry but that entry is flagged (error/low confidence). These can be reported to the vendor but do not need adding to the db because they are already in the db. A superset including scenario 6.
+
+Scenario 4, no out file:
+    Matches db entry and that db entry is not knowingly wrong/low confidence. No report, no actions.
+
+Scenario 5, file self.tabname + '_new_pos_mismatch.txt':
+    Variant didn't match any db entry, flagged or otherwise, this is a 'new' mismatch. Needs reporting and can be added to the db so that it becomes a known mismatch. Same as scenario 7 except it mismatched a correct/high confidence db entry
+
+Scenario 6, file self.tabname + '_matches_flagged_alt_avail.txt':
+    It doesn't match the current consensus db version, but it does match an already flagged entry in the db so no additions to the db are necessary because it is not an unseen/new position for this variant. This can be reported to the vendor as a mismatch. In other words, it matches an incorrect entry (a subset of scenario 3), in addition, mismatches a correct entry. So those in scenario 3 that are not also in scenario 6 may have no 'correct'/high confidence coordinates for b38 of this variant. 
+
+Scenario 7:
+    Variant didn't match any db entry, flagged or otherwise, this is a 'new' mismatch. Needs reporting and can be added to the db so that it becomes a known mismatch. Same as scenario 5 except it mismatched an incorrect/low confidence db entry
+
+Scenario 8, file self.tabname + '_no38pos.txt':
+    No b38 position available in db for comparison. This can be added to the db so that it exists.
