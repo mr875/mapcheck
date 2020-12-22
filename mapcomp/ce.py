@@ -5,7 +5,7 @@ class CE(MapTable,CompOmics):
     
     tabcols = {'coreexome_map':['snp','dbsnpid','chr']}
     tabfilters = {'coreexome_map':['chr <> "chr"']}
-    relvds = {'coreexome_map': [170,171,232]}
+    relvds = {'coreexome_map': ['170','171','232']}
 
     def getcols(self,arr):
         uid,alts = self.rs_mult(arr[1]) #could be comma separated multiple

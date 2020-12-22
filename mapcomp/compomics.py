@@ -15,6 +15,7 @@ class CompOmics:
         self.no38pos = self.of.new(self.tabname + '_no38pos.txt')
         self.matchflag = self.of.new(self.tabname + '_matches_flagged.txt')
         self.matchflag_alt = self.of.new(self.tabname + '_matches_flagged_alt_avail.txt')
+        self.lowcflank = self.of.new(self.tabname + '_lowconf_flank.txt')
 
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
         self.output_setup()
@@ -46,12 +47,27 @@ class CompOmics:
         now = int(time.time() - seconds)
         print("got to end, %s seconds" % (now))
 
+    def uid_fscan(self,uid,ori_uid):
+        q = 'SELECT datasource,chosen,flank_seq FROM flank WHERE id = %s'
+        vals = (uid,)
+        self.omcurs.execute(q,vals)
+        rows = self.omcurs.fetchall()
+        dsrc = [row[0] for row in rows]
+        chosen = [row[1] for row in rows]
+        flank = [row[2] for row in rows]
+        if 1 in chosen:
+            for ind,ds in enumerate(dsrc):
+                if chosen[ind] == 0 and ds in self.relvds[self.tabname]:
+                    #print('low confidence flank detected\t%s (orig %s)\t%s' % (uid,ori_uid,flank[ind]))
+                    self.lowcflank.write('low confidence flank detected\t%s (orig %s)\t%s\n' % (uid,ori_uid,flank[ind]))
+
     def uid_proc(self,uid,chrm,pos,ori_uid=None): # if ori_uid is used it means that uid is from omics db (via alt_ids table)
         if ori_uid:
             if self.isnewrs(uid,ori_uid):
                 self.rsomics.write('mapfile id: %s\tomics db id: %s\n' % (ori_uid,uid))
         else:
             ori_uid = uid
+        self.uid_fscan(uid,ori_uid)
         q = 'SELECT CONCAT(chr,":",pos),build,datasource,chosen FROM positions WHERE id = %s'
         vals = (uid,)
         self.omcurs.execute(q,vals)
