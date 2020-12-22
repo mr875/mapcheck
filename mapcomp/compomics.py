@@ -14,6 +14,7 @@ class CompOmics:
         self.new_mismatch = self.of.new(self.tabname + '_new_pos_mismatch.txt')
         self.no38pos = self.of.new(self.tabname + '_no38pos.txt')
         self.matchflag = self.of.new(self.tabname + '_matches_flagged.txt')
+        self.matchflag_alt = self.of.new(self.tabname + '_matches_flagged_alt_avail.txt')
 
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
         self.output_setup()
@@ -74,7 +75,7 @@ class CompOmics:
                         continue # SCENARIO 1
                     if chosen[ind] < 0:
                         mismatch_f = True
-                        print('mismatch against already flagged omics entry: %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
+                        #print('mismatch against already flagged omics entry: %s (orig %s)\t%s:%s\t%s' % (uid,ori_uid,chrm,pos,','.join(strrow)))
                         continue # SCENARIO 2 (no report)
                     mismatch = True
                 else: # match
@@ -87,7 +88,7 @@ class CompOmics:
                 if not match_f: # full mismatch (against everything both flagged and not), 'a new mismatch' SCENARIO 5
                     self.new_mismatch.write('mismatch against all b38 db entries\t%s (orig %s)\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,'/'.join(chrpos)))
                 else: #SCENARIO 6
-                    print('mismatch detected, known by db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
+                    self.matchflag_alt.write('%s (orig %s) matched flagged, non flagged available\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,','.join(chrpos )))
             if mismatch_f:
                 if not match: #SCENARIO 7
                     print('no match, new to db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
