@@ -8,6 +8,7 @@ class CompOmics:
 
     def output_setup(self):
         self.new_alt_rs = self.of.new(self.tabname + '_new_alt_rs.txt')
+        self.new_rs_byalt = self.of.new(self.tabname + '_new_rs_byalt.txt')
         self.new_rs = self.of.new(self.tabname + '_new_rs.txt')
         self.rsomics = self.of.new(self.tabname + '_rs_from_omics.txt')
         self.OOpos = self.of.new(self.tabname + '_pos_for_oo.txt')
@@ -165,7 +166,10 @@ class CompOmics:
         diffmain = self.checkalt(suid)
         if diffmain:
             if self.isnewrs(uid,suid):
-                self.new_alt_rs.write('not in alt_ids (uid): %s\tin alt_ids (suid): %s\tdb main id: %s\n' % (uid,suid,diffmain))
+                if search('^rs',diffmain):
+                    self.new_alt_rs.write('not in alt_ids (uid): %s\tin alt_ids (suid): %s\tdb main id: %s\n' % (uid,suid,diffmain))
+                else:
+                    self.new_rs_byalt.write('not in alt_ids (uid): %s\tin alt_ids (suid): %s\tdb main id: %s\n' % (uid,suid,diffmain))
             self.uid_proc(diffmain,chrm,pos,uid)
             return
         print("WARNING: not found in consensus or alt_ids: ",uid,suid,chrm,pos)

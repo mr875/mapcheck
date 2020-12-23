@@ -1,3 +1,41 @@
+code base: https://github.com/mr875/mapcheck
+https://me-cbrintweb.medschl.cam.ac.uk:8443/browse/DSP-373
+
+What it does:
+Receives the name of a mapping table in br from below
++-------------------------+
+| Tables_in_br (%_map)    |
++-------------------------+
+| coreexome_map           |
+| humanexome_map          |
+| infiniumimmunoarray_map |
+| lgc_map                 |
+| msexome_map             |
+| omniexpress_map         |
+| omniexpress_v2_1_map    |
+| ukbbaffy_map            |
+| ukbbaffy_v2_1_map       |
++-------------------------+
+So far it only recognises 'coreexome_map'.
+Pending: add the rest. It requires 3 columns from the table: main id, alternative id (if available), chr:pos
+Adding each table should be a quick process of mapping the correct column number to main id, alternative id and chr:pos
+It downloads the 3 columns to a file and then checks each line with the omics consensus database and produces 8 out put files:
+
+File 1: self.tabname + '_new_alt_rs.txt AND self.tabname + '_new_rs_byalt.txt'
+This file lists rs ids from the map table that are not in the omics database consensus table OR the alt_ids table. Instead the secondary id in the map table was used to find the correct variant in the omics alt_ids table. So, the rs id can be added to the alt_ids table or even swapped in to the consensus table if there is not already an rs id for the variant (_new_rs_byalt.txt added later)
+
+File 2: self.tabname + '_new_rs.txt'
+This file lists rs ids that are not known to the omics consensus database. These can be swapped in because the omics database only has non-rs ids for these variants. 
+
+File 3: self.tabname + '_rs_from_omics.txt'
+This file lists rs ids in the omics consensus database that are not known to the map table. Because rs ids are preferable to non rs ids these can be added to the map tables. 
+
+File 4: self.tabname + '_lowconf_flank.txt'
+This file lists variants in the map table that have a low confidence flank in the omics consensus database. This means that the variant has different flank sequences associated to it and (during a previous step) 1 of them has been selected by comparing them to the external reference sequence. If the data source of the flank sequence that is NOT selected is related (according to vendor) to the map table then the variant is included in this file. 
+
+The next 5 files are created by comparing the chr:pos from the map table with the omics consensus database. The variants are categorised according to 8 possible scenarios: 
+
+
 Scenario 1, file self.tabname + '_pos_for_oo.txt':
     Variant has 0:0 for position but the db has a genuine non 0:0 position for this variant if required
 
