@@ -17,6 +17,8 @@ class CompOmics:
         self.matchflag = self.of.new(self.tabname + '_matches_flagged.txt')
         self.matchflag_alt = self.of.new(self.tabname + '_matches_flagged_alt_avail.txt')
         self.lowcflank = self.of.new(self.tabname + '_lowconf_flank.txt')
+        self.notindb_cmatch = self.of.new(self.tabname + '_notindb_coordmatch.txt')
+        self.notindb = self.of.new(self.tabname + '_notindb.txt')
 
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
         self.output_setup()
@@ -114,6 +116,17 @@ class CompOmics:
         else: #SCENARIO 8
             self.no38pos.write('no (b38) position available in omics:\t%s (orig %s)\t%s:%s\n' % (uid,ori_uid,chrm,pos))
 
+    def chrpos_lookup(self,uid,suid,chrm,pos):
+        q = 'SELECT id,chosen FROM positions WHERE build = %s AND chr = %s AND pos = %s'
+        vals = ('38',chrm,pos)
+        self.omcurs.execute(q,vals) 
+        rows = self.omcurs.fetchall()
+        ids = [row[0] for row in rows]
+        if len(ids) > 0:
+            self.notindb_cmatch.write("not in db:\t%s\t%s\t%s:%s\tmatched coord with:%s\n" % (uid,suid,chrm,pos,','.join(ids)))
+        else:
+            self.notindb.write("not in db:\t%s\t%s\t%s:%s\n" % (uid,suid,chrm,pos))
+
     def fetchone(self,val,q):
         vals = (val,)
         self.omcurs.execute(q,vals) 
@@ -174,5 +187,5 @@ class CompOmics:
                     self.new_rs_byalt.write('not in alt_ids (uid): %s\tin alt_ids (suid): %s\tdb main id: %s\n' % (uid,suid,diffmain))
             self.uid_proc(diffmain,chrm,pos,uid)
             return
-        print("WARNING: not found in consensus or alt_ids: ",uid,suid,chrm,pos)
+        self.chrpos_lookup(uid,suid,chrm,pos) # not found in consensus or alt_ids
 
