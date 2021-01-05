@@ -74,6 +74,7 @@ class CompOmics:
         self.omcurs.execute(q,vals)
         rows = self.omcurs.fetchall()
         chrpos = [row[0] for row in rows]
+        chrpos38 = []
         build =  [row[1] for row in rows]
         ds =  [row[2] for row in rows]
         chosen =  [row[3] for row in rows]
@@ -84,9 +85,10 @@ class CompOmics:
         if '38' in build:
             for ind,cp in enumerate(chrpos):
                 strrow = [str(c) for c in rows[ind]]
+                if build[ind] == '37':
+                    continue
+                chrpos38.append(cp)
                 if cp != (chrm + ':' + pos):
-                    if build[ind] == '37':
-                        continue
                     if chrm + ':' + pos == '0:0':
                         self.OOpos.write('positions available for %s 0:0\t%s\n' % (ori_uid,','.join(strrow)))
                         continue # SCENARIO 1
@@ -103,9 +105,9 @@ class CompOmics:
                         match = True # SCENARIO 4 (no report) 
             if mismatch:
                 if not match_f: # full mismatch (against everything both flagged and not), 'a new mismatch' SCENARIO 5
-                    self.new_mismatch.write('mismatch against all b38 db entries\t%s (orig %s)\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,'/'.join(chrpos)))
+                    self.new_mismatch.write('mismatch against all b38 db entries\t%s (orig %s)\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,'/'.join(chrpos38)))
                 else: #SCENARIO 6
-                    self.matchflag_alt.write('%s (orig %s) matched flagged, non flagged available\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,','.join(chrpos )))
+                    self.matchflag_alt.write('%s (orig %s) matched flagged, non flagged available\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,','.join(chrpos)))
             if mismatch_f:
                 if not match: #SCENARIO 7
                     print('no match, new to db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
