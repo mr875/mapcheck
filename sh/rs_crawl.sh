@@ -18,5 +18,9 @@ fi
 chrpos38=$(grep "</a></span></dd><dt>Chromosome: </dt><dd>" $out | sed 's/^.\+<dd>//' | uniq | paste -s -d ' ')
 chrpos37=$(grep '(GRCh38)<br />' $out | sed 's/.\+\/>//' | uniq | paste -s -d ' ')
 merges=$(egrep -o "rs[0-9]+ has merged into .+rs[0-9]+\">" out_rs_crawl | sed 's/^\(rs[0-9]\+\).\+\(rs[0-9]\+\).*$/\1 \2/' | paste -s -d ',')
-echo -e "${rsid}\tb38=$chrpos38\tb37=$chrpos37\tMerges: $merges"
+if [ -z "$merges" ]; then
+    echo -e "${rsid}\tb38=$chrpos38\tb37=$chrpos37"
+else
+    echo -e "${rsid}\tb38=$chrpos38\tb37=$chrpos37\tMerges: $merges"
+fi
 rm $out

@@ -5,16 +5,11 @@ crawl="${DIR}/rs_crawl.sh"
 while IFS=$'\t' read -r nothing id tabloc dblocs
 do
     id=${id%% *}
-    dbloc=${dblocs%/*}
-    echo $id $tabloc $dbloc
+#    dbloc=${dblocs%/*}
     if [[ $id =~ ^rs[0-9] ]]; then
         idlookup=$($crawl $id)
-        echo -e "$id\ttab=$tabloc\tdb=$dbloc\tlookup=$idlookup"
+        echo -e "$id\ttab=$tabloc\tdb=$dblocs\tlookup=$idlookup"
     else
-        echo -e "$id\ttab=$tabloc\tdb=$dbloc"
+        echo -e "$id\ttab=$tabloc\tdb=$dblocs"
     fi
-#    cur=$(echo $curr | egrep -o 'rs[0-9]+$')
-#    nlookup=$($crawl $new)
-#    clookup=$($crawl $cur)
-#    echo -e "New ($new):$nlookup\tCurrent ($cur):$clookup" 
 done < $new_pos_mismatch
