@@ -45,7 +45,10 @@ class DBConnect:
     def resetCursors(self):
         for c in self.cursors:
             if c.rowcount == 0: # unread result
-                c.fetchall()
+                try:
+                    c.fetchall()
+                except mysql.connector.errors.InterfaceError:
+                    pass
             c.close()
         self.cursors=[]
 
