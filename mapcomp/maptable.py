@@ -40,9 +40,10 @@ class MapTable:
         for col in self.tabcols[self.tabname]:
             q = q + col + ', '
         q = q[:-2] + ' FROM ' + self.tabname
-        flist = self.tabfilters[self.tabname] 
-        fstr = ' WHERE ' + ' AND '.join(flist)
-        q = q + fstr
+        if self.tabname in self.tabfilters:
+            flist = self.tabfilters[self.tabname] 
+            fstr = ' WHERE ' + ' AND '.join(flist)
+            q = q + fstr
         if limit:
             q = q + ' LIMIT ' + str(limit)
         return q
