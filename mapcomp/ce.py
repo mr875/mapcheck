@@ -3,14 +3,14 @@ from .compomics import CompOmics
 
 class CE(MapTable,CompOmics):
     
-    tabcols = {'coreexome_map':['snp','dbsnpid','chr'],'humanexome_map':['snp','dbsnpid','chr'], 'infiniumimmunoarray_map':['snp','dbsnpid','chr']}
-    tabfilters = {'coreexome_map':['chr <> "chr"'], 'humanexome_map':['chr <> "chr"']}
-    relvds = {'coreexome_map': ['170','171','232'],'humanexome_map':['233'],'infiniumimmunoarray_map':['70','234']}
+    tabcols = {'coreexome_map':['snp','dbsnpid','chr'],'humanexome_map':['snp','dbsnpid','chr'], 'infiniumimmunoarray_map':['snp','dbsnpid','chr'], 'msexome_map':['snp','dbsnpid','chr']}
+    tabfilters = {'coreexome_map':['chr <> "chr"'], 'humanexome_map':['chr <> "chr"'],'msexome_map':['chr <> ""']}
+    relvds = {'coreexome_map': ['170','171','232'],'humanexome_map':['233'],'infiniumimmunoarray_map':['70','234'],'msexome_map':['72']}
 
     def getcols(self,arr):
         uid,alts = self.rs_mult(arr[1]) #could be comma separated multiple, uid is expected in 2nd col (tabcols for CE type)
         suid = arr[0]
-        if uid == '0':
+        if uid == '0' or uid == '':
             uid = suid
             suid = None
         chrmpos = arr[2].split(':')

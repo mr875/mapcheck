@@ -14,9 +14,13 @@ def main():
 #    he.step('chip_comp',0,20)
 #    he.step('chip_comp',0)
 #    imuno = CE('infiniumimmunoarray_map').table_dump()
-    imuno = CE('infiniumimmunoarray_map')
-    imuno.add_file()
-    imuno.step('chip_comp',0)
+#    imuno = CE('infiniumimmunoarray_map')
+#    imuno.add_file()
+#    imuno.step('chip_comp',0)
+#    msex = CE('msexome_map').table_dump()
+    msex = CE('msexome_map')
+    msex.add_file()
+    msex.step('chip_comp',0)
 
 if __name__ == "__main__":
     main()
