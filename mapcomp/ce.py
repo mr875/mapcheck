@@ -31,3 +31,23 @@ class CE(MapTable,CompOmics):
         chosen = arr.pop(ind)
         return chosen,arr
 
+class omni(MapTable,CompOmics):
+
+    tabcols = {'omniexpress_map':['snp','dbsnpid','chr']}
+    tabfilters = {'omniexpress_map':['chr <> ""']}
+    relvds = {'omniexpress_map':['73','235']}
+
+    def getcols(self,arr):
+        uid = arr[1]
+        suid = arr[0]
+        if "VG" in uid:
+            uid = suid
+            suid = None
+        chrmpos = arr[2].split(':')
+        if len(chrmpos) != 2:
+            mssg = 'unexpected value in chr_pos field: ' + ', '.join(arr)
+            raise RuntimeError(mssg)
+        chrm = chrmpos[0]
+        pos = chrmpos[1]
+        return uid,suid,chrm,pos,[] #alts is an array
+

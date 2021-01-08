@@ -179,7 +179,9 @@ class CompOmics:
                 if diffmain:
                     self.uid_proc(diffmain,chrm,pos,uid)
                     return
-        diffmain = self.checkalt(suid)
+        diffmain=None
+        if suid:
+            diffmain = self.checkalt(suid)
         if diffmain:
             if self.isnewrs(uid,suid):
                 if search('^rs',diffmain):
