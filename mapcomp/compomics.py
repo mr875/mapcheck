@@ -19,6 +19,7 @@ class CompOmics:
         self.lowcflank = self.of.new(self.tabname + '_lowconf_flank.txt')
         self.notindb_cmatch = self.of.new(self.tabname + '_notindb_coordmatch.txt')
         self.notindb = self.of.new(self.tabname + '_notindb.txt')
+        self.mismatchflag_alt = self.of.new(self.tabname + '_mismatch_flagged_alt_avail.txt')
 
     def step(self,omics="omics",start=1,finish=None): # s&f: 1/0,5 -> 6,10 etc ...
         self.output_setup()
@@ -111,8 +112,8 @@ class CompOmics:
                 else: #SCENARIO 6
                     self.matchflag_alt.write('%s (orig %s) matched flagged, non flagged available\t%s:%s\t%s\n' % (uid,ori_uid,chrm,pos,','.join(chrpos)))
             if mismatch_f:
-                if not match: #SCENARIO 7
-                    print('no match, new to db\t%s (orig %s)\t%s:%s' % (uid,ori_uid,chrm,pos))
+                if not match and not match_f: #SCENARIO 7
+                    self.mismatchflag_alt.write('no match, but db entry is flagged, possible new alternative position for db\t%s (orig %s)\t%s:%s\n' % (uid,ori_uid,chrm,pos))
         else: #SCENARIO 8
             self.no38pos.write('no (b38) position available in omics:\t%s (orig %s)\t%s:%s\n' % (uid,ori_uid,chrm,pos))
 
