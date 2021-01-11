@@ -1,5 +1,6 @@
 #from mapcomp.maptable import MapTable
 from mapcomp.ce import CE
+from mapcomp.ce import omni
 
 def main():
 
@@ -18,9 +19,17 @@ def main():
 #    imuno.add_file()
 #    imuno.step('chip_comp',0)
 #    msex = CE('msexome_map').table_dump()
-    msex = CE('msexome_map')
-    msex.add_file()
-    msex.step('chip_comp',0)
+#    msex = CE('msexome_map')
+#    msex.add_file()
+#    msex.step('chip_comp',0)
+#    om = omni('omniexpress_map').table_dump()
+#    om = omni('omniexpress_map')
+#    om.add_file()
+#    om.step('chip_comp',0)
+#    om21 = omni('omniexpress_v2_1_map').table_dump()
+    om21 = omni('omniexpress_v2_1_map')
+    om21.add_file()
+    om21.step('chip_comp',0)
 
 if __name__ == "__main__":
     main()

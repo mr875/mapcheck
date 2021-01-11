@@ -33,9 +33,9 @@ class CE(MapTable,CompOmics):
 
 class omni(MapTable,CompOmics):
 
-    tabcols = {'omniexpress_map':['snp','dbsnpid','chr']}
+    tabcols = {'omniexpress_map':['snp','dbsnpid','chr'],'omniexpress_v2_1_map':['snp','dbsnpid','chr']}
     tabfilters = {'omniexpress_map':['chr <> ""']}
-    relvds = {'omniexpress_map':['73','235']}
+    relvds = {'omniexpress_map':['73','235'],'omniexpress_v2_1_map':['73','235']}
 
     def getcols(self,arr):
         uid = arr[1]
