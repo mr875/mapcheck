@@ -1,6 +1,7 @@
 #from mapcomp.maptable import MapTable
 from mapcomp.ce import CE
 from mapcomp.ce import omni
+from mapcomp.ce import ukb
 
 def main():
 
@@ -27,9 +28,13 @@ def main():
 #    om.add_file()
 #    om.step('chip_comp',0)
 #    om21 = omni('omniexpress_v2_1_map').table_dump()
-    om21 = omni('omniexpress_v2_1_map')
-    om21.add_file()
-    om21.step('chip_comp',0)
+#    om21 = omni('omniexpress_v2_1_map')
+#    om21.add_file()
+#    om21.step('chip_comp',0)
+#    ukb21 = ukb('ukbbaffy_v2_1_map').table_dump()
+    ukb21 = ukb('ukbbaffy_v2_1_map')
+    ukb21.add_file()
+    ukb21.step('chip_comp',0)
 
 if __name__ == "__main__":
     main()

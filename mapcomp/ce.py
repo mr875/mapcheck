@@ -51,3 +51,8 @@ class omni(MapTable,CompOmics):
         pos = chrmpos[1]
         return uid,suid,chrm,pos,[] #alts is an array
 
+class ukb(CE):
+
+    tabcols = {'ukbbaffy_v2_1_map':['chipid','dbsnpid','chr']}
+    tabfilters = {'ukbbaffy_v2_1_map':['chr REGEXP "^[YX]|[0-9]+:"']}    
+    relvds = {'ukbbaffy_v2_1_map':[231]}
