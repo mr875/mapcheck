@@ -54,5 +54,5 @@ class omni(MapTable,CompOmics):
 class ukb(CE):
 
     tabcols = {'ukbbaffy_v2_1_map':['chipid','dbsnpid','chr']}
-    tabfilters = {'ukbbaffy_v2_1_map':['chr REGEXP "^[YX]|[0-9]+:"']}    
+    tabfilters = {'ukbbaffy_v2_1_map':['chr REGEXP "^([YX]|[0-9])+:"']}    
     relvds = {'ukbbaffy_v2_1_map':[231]}
