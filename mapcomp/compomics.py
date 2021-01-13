@@ -35,7 +35,6 @@ class CompOmics:
             fiveper = fiveper + start
             for line in self.qf.readls():
                 counter += 1
-                #print(counter,fiveper)
                 if counter < start:
                     continue
                 if counter == (finish + 1):

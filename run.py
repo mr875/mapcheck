@@ -34,7 +34,7 @@ def main():
 #    ukb21 = ukb('ukbbaffy_v2_1_map').table_dump()
     ukb21 = ukb('ukbbaffy_v2_1_map')
     ukb21.add_file()
-    ukb21.step('chip_comp',0)
+    ukb21.step('chip_comp',363835)
 
 if __name__ == "__main__":
     main()
