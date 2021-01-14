@@ -7,7 +7,7 @@ from utils.queryfile import QueryFile, NormFile
 
 class ProcFile:
 
-    def __init__(self,fname):
+    def __init__(self,fname,tabname):
         self.inp = NormFile(fname)
         self.ts = datetime.now().strftime("%d%b_%Hhr")
         print("line count",self.inp.row_count)
@@ -56,7 +56,11 @@ class ProcFile:
                 self.swapout_main(swin=newrs,swout=currs)
                 continue
             newrsb38 = self.getb38(new_current[0]) 
-            print("no action coded for map table %s and omics db %s" % (newrs,currs))
+            currsb38 = self.getb38(new_current[1])
+            if newrsb38 != currsb38:
+                self.checkcoord(mid=newrs,chrpos=newrsb38,db='omics')
+                print("map table %s and omics db %s have non matching b38 coords in dbsnp (%s and %s respectively), but they are linked in omics db" % (newrs,currs,newrsb38,currsb38))
+            #print("no action coded for map table %s and omics db %s" % (newrs,currs))
         report.close()
 
     def grabrsinp(self,col):
@@ -96,7 +100,7 @@ class ProcFile:
 
     def getb38(self,container):
         rslt = re.search('(?:b38=)(\S+)',container)
-        print(rslt.group(1))
+        return rslt.group(1)
 
     def add_alt(self,alt,main):
         pass
@@ -105,4 +109,7 @@ class ProcFile:
         pass
 
     def swapout_main(self,swin,swout):
+        pass
+
+    def checkcoord(self,mid,chrpos,db):
         pass
