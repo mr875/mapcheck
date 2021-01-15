@@ -1,67 +1,24 @@
-#from utils.connect import DBConnect
+from .types import Types
 from datetime import datetime
 import sys
 import os
 import re
 from utils.queryfile import QueryFile, NormFile
 
-class ProcFile:
+class ProcFile(Types):
 
-    def __init__(self,fname,tabname):
+    def __init__(self,fname,tabname,omics,br):
         self.inp = NormFile(fname)
         self.ts = datetime.now().strftime("%d%b_%Hhr")
+        self.omics = omics
+        self.br = br
+        self.tabname = tabname
         print("line count",self.inp.row_count)
         if 'map_new_alt_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
                 self.newaltrs()
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_alt_rs.sh',self.inp.bfile,'out_map_new_alt_rs.txt'))
-
-    def newaltrs(self):
-        #rs id not found in db but db already has another rs id for that variant
-        report = open('report_newaltr_' + self.ts + '.txt',"w")
-        count = 0
-        for line in self.inp.read():
-            count+=1
-            if count == 7:
-                break
-            #print(line)
-            new_current = re.split('Current',line)
-            newrs = self.grabrsinp(new_current[0])
-            currs = self.grabrsinp(new_current[1])
-            newmchk = self.mergecheck(new_current[0])
-            curmchk = self.mergecheck(new_current[1])
-            if newmchk['withdrawn']:
-                if not curmchk['withdrawn']:
-                    report.write('map table %s is withdrawn from dbsnp, use omics db %s instead\n' % (newrs,currs))
-                    self.add_alt(alt=newrs,main=currs)
-                    self.mtab_change_id(xsting=newrs,chngto=currs)
-                else:
-                    report.write('map table %s AND omics db %s are withdrawn from dbsnp\n' % (newrs,currs))
-                continue   
-            if curmchk['withdrawn']:
-                report.write('omics db %s is withdrawn. map table %s to be used in omics db\n' % (currs,newrs))
-                self.swapout_main(swin=newrs,swout=currs)
-                continue
-            mergelist = newmchk['merges'] + curmchk['merges']
-            newtocurr = self.frominto(evenarr=mergelist,bfor=newrs,aftr=currs)
-            if newtocurr['correct']:
-                report.write("map table %s merged into omics db %s, use %s\n" % (newrs,currs,currs))
-                self.add_alt(alt=newrs,main=currs)
-                self.mtab_change_id(xsting=newrs,chngto=currs)
-                continue
-            currtonew = self.frominto(evenarr=mergelist,bfor=currs,aftr=newrs)
-            if currtonew['correct']:
-                report.write("omics db %s merged into map table %s, omics db to take %s\n" % (currs,newrs,newrs))
-                self.swapout_main(swin=newrs,swout=currs)
-                continue
-            newrsb38 = self.getb38(new_current[0]) 
-            currsb38 = self.getb38(new_current[1])
-            if newrsb38 != currsb38:
-                self.checkcoord(mid=newrs,chrpos=newrsb38,db='omics')
-                print("map table %s and omics db %s have non matching b38 coords in dbsnp (%s and %s respectively), but they are linked in omics db" % (newrs,currs,newrsb38,currsb38))
-            #print("no action coded for map table %s and omics db %s" % (newrs,currs))
-        report.close()
 
     def grabrsinp(self,col):
         rs = re.search("(?:\()(rs[0-9]+)(?:\))", col)
@@ -111,5 +68,34 @@ class ProcFile:
     def swapout_main(self,swin,swout):
         pass
 
-    def checkcoord(self,mid,chrpos,db):
+    def checkbr_pos(self,mid,chrpos):
+        if 'ukbbaffy_v2_1_map' in self.tabname:
+            rscol = 'chipid'
+        else:
+            rscol = 'dbsnpid'
+        q = 'SELECT chr FROM ' + self.tabname + ' WHERE snp = %s'
+        val = (mid,)
+        self.br.execute(q,val)
+        res = self.br.fetchall()
+        if self.br.rowcount == 0 and 'rs' in mid: # or len(res)
+            q = 'SELECT chr FROM ' + self.tabname + ' WHERE ' + rscol + ' REGEXP %s'
+            val = (mid+'[[:>:]]',)
+            self.br.execute(q,val)
+            res = self.br.fetchall()
+        res = [s[0] for s in res]
+        if chrpos in res:
+            return True
+        return False
+
+    def checkom_pos(self,mid,chrpos):
+        q = 'SELECT chr,pos FROM positions WHERE build = %s AND id = %s'
+        val = ('38',mid)
+        self.omics.execute(q,val)
+        res = self.omics.fetchall()
+        res = [s[0] + ':'+ str(s[1]) for s in res]
+        if chrpos in res:
+            return True
+        return False
+
+    def extra_map(self,newid,linkid,chrpos,datasource,chosen):
         pass
