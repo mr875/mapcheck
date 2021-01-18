@@ -57,7 +57,7 @@ class ProcFile(Types):
 
     def getb38(self,container):
         rslt = re.search('(?:b38=)(\S+)',container)
-        return rslt.group(1)
+        return rslt.group(1) # will need handling: AttributeError: 'NoneType' object has no attribute 'group'
 
     def add_alt(self,alt,main):
         pass
@@ -68,6 +68,18 @@ class ProcFile(Types):
     def swapout_main(self,swin,swout):
         pass
 
+    def pos_flag(self,mid,chrpos,fl=-5):
+        vals = (fl,mid,'38',chrpos,-1)
+        q = 'UPDATE positions SET chosen = %s WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s AND chosen > %s'
+        #self.omics.execute(q,vals)
+
+    def addpos(self,mid,chrpos,ds,build='38'):
+        chrm = chrpos.split(':')[0]
+        pos = int(chrpos.split(':')[1])
+        q = 'INSERT IGNORE INTO positions (id, chr, pos, build, datasource) VALUES (%s,%s,%s,%s,%s)'
+        vals = (mid,chrm,pos,build,ds)
+        #self.omics.execute(q,vals)
+    
     def checkbr_pos(self,mid,chrpos):
         if 'ukbbaffy_v2_1_map' in self.tabname:
             rscol = 'chipid'
@@ -84,8 +96,8 @@ class ProcFile(Types):
             res = self.br.fetchall()
         res = [s[0] for s in res]
         if chrpos in res:
-            return True
-        return False
+            return [True,res]
+        return [False,res]
 
     def checkom_pos(self,mid,chrpos):
         q = 'SELECT chr,pos FROM positions WHERE build = %s AND id = %s'
@@ -94,8 +106,17 @@ class ProcFile(Types):
         res = self.omics.fetchall()
         res = [s[0] + ':'+ str(s[1]) for s in res]
         if chrpos in res:
-            return True
-        return False
+            return [True,res]
+        return [False,res]
 
-    def extra_map(self,newid,linkid,chrpos,datasource,chosen):
-        pass
+    def extra_map(self,newid,linkid,chrpos,datasource,chosen,ds_chrpos=None):
+        chrm = chrpos.split(':')[0]
+        pos = chrpos.split(':')[1]
+        if not ds_chrpos:
+            q = "INSERT IGNORE INTO extra_map (newid,linkid,chr,GRCh38_pos,datasource,chosen) VALUES ('%s','%s','%s','%s','%s',%s)"
+            vals = (newid,linkid,chrm,pos,datasource,str(chosen))
+        else:
+            q = "INSERT IGNORE INTO extra_map (newid,linkid,chr,GRCh38_pos,datasource,ds_chrpos,chosen) VALUES ('%s','%s','%s','%s','%s','%s',%s)"
+            vals = (newid,linkid,chrm,pos,datasource,ds_chrpos,str(chosen))
+        self.extra_map_f.write((q+';\n') % vals)
+

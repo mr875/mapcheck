@@ -23,6 +23,7 @@ def main(argv):
     try:
         pf = ProcFile(fname,tabname,omcurs,brcurs)
     finally:
+        omics.commit()
         omics.close()
         br.close()
 
