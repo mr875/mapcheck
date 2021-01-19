@@ -80,7 +80,7 @@ class ProcFile(Types):
         vals = (mid,chrm,pos,build,ds)
         #self.omics.execute(q,vals)
     
-    def checkbr_pos(self,mid,chrpos):
+    def checkbr_pos(self,mid,chrpos=None):
         if 'ukbbaffy_v2_1_map' in self.tabname:
             rscol = 'chipid'
         else:
@@ -95,16 +95,20 @@ class ProcFile(Types):
             self.br.execute(q,val)
             res = self.br.fetchall()
         res = [s[0] for s in res]
+        if not chrpos:
+            return res
         if chrpos in res:
             return [True,res]
         return [False,res]
 
-    def checkom_pos(self,mid,chrpos):
+    def checkom_pos(self,mid,chrpos=None):
         q = 'SELECT chr,pos FROM positions WHERE build = %s AND id = %s'
         val = ('38',mid)
         self.omics.execute(q,val)
         res = self.omics.fetchall()
         res = [s[0] + ':'+ str(s[1]) for s in res]
+        if not chrpos:
+            return res
         if chrpos in res:
             return [True,res]
         return [False,res]

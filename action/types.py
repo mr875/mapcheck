@@ -12,7 +12,7 @@ class Types:
         count = 0
         for line in self.inp.read():
             count+=1
-            if count == 10:
+            if count == 15:
                 break
             #print(line)
             new_current = re.split('Current',line)
@@ -47,22 +47,28 @@ class Types:
             newrsb38 = self.getb38(new_current[0]) 
             currsb38 = self.getb38(new_current[1])
             if newrsb38 != currsb38:
+                ch_count = 0
                 checkom = self.checkom_pos(mid=currs,chrpos=currsb38)
                 chosen = 0
                 ds_chrpos = None
                 if not checkom[0]:
-                    print('note: omics db chrpos for %s does not match with dbsnp. No action yet' % (currs))
+                    report.write('map table %s linked via alt id to omics db %s but they do not have the same chrpos in dbsnp. omics chrpos of %s does not match dbsnp. entry will be flagged in positions table. map table rs added to extra_map\n' % (newrs,currs,currs))
+                    ch_count+=1
                     om_chrpos = list(dict.fromkeys(checkom[1]))
                     [self.pos_flag(currs,om_cp) for om_cp in om_chrpos]
                     self.addpos(mid=currs,chrpos=currsb38,ds='dbsnp')
                 checkbr = self.checkbr_pos(mid=newrs,chrpos=newrsb38)
                 if not checkbr[0]:
-                    report.write('map table %s linked via alt id to omics db %s but they do not have the same chrpos in dbsnp. map table chrpos of %s does not match dbsnp. check extra_map table\n' % (newrs,currs,newrs))
+                    report.write('map table %s linked via alt id to omics db %s but they do not have the same chrpos in dbsnp. map table chrpos of %s does not match dbsnp. map table rs added to extra_map with error flag\n' % (newrs,currs,newrs))
+                    ch_count+=1
                     chosen = -1
                     ds_chrpos = list(dict.fromkeys(checkbr[1]))
                     ds_chrpos=','.join(ds_chrpos)
+                if ch_count == 0 or ch_count == 2:
+                   print('newrsb38 != currsb38, %s x reporting. check %s/%s' % (ch_count,newrs,currs)) 
                 self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=ds_chrpos)
                 continue
+            # if reached here then newrsb38 == currsb38 but they weren't found in either merge list so they are probably different at the variant type level
             print("no action coded for map table %s and omics db %s" % (newrs,currs))
         report.close()
         self.extra_map_f.close()
