@@ -59,44 +59,67 @@ class ProcFile(Types):
         rslt = re.search('(?:b38=)(\S+)',container)
         return rslt.group(1) # will need handling: AttributeError: 'NoneType' object has no attribute 'group'
 
-    def add_alt(self,alt,main):
+    def add_alt(self,alt,main,ds):
         pass
 
     def mtab_change_id(self,xsting,chngto):
         pass
 
-    def swapout_main(self,swin,swout):
-        pass
-
-    def pos_flag(self,mid,chrpos,fl=-5):
-        vals = (fl,mid,'38',chrpos,-1)
-        q = 'UPDATE positions SET chosen = %s WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s AND chosen > %s'
-        #self.omics.execute(q,vals)
-
-    def addpos(self,mid,chrpos,ds,build='38'):
-        chrm = chrpos.split(':')[0]
-        pos = int(chrpos.split(':')[1])
-        q = 'INSERT IGNORE INTO positions (id, chr, pos, build, datasource) VALUES (%s,%s,%s,%s,%s)'
-        vals = (mid,chrm,pos,build,ds)
-        #self.omics.execute(q,vals)
-    
-    def checkbr_pos(self,mid,chrpos=None):
+    def mtab_get_where_string(self,anid):
         if 'ukbbaffy_v2_1_map' in self.tabname:
             rscol = 'chipid'
         else:
             rscol = 'dbsnpid'
-        q = 'SELECT chr FROM ' + self.tabname + ' WHERE snp = %s'
-        val = (mid,)
+        where = ' WHERE snp = %s'
+        q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
+        val = (anid,)
         self.br.execute(q,val)
         res = self.br.fetchall()
-        if self.br.rowcount == 0 and 'rs' in mid: # or len(res)
-            q = 'SELECT chr FROM ' + self.tabname + ' WHERE ' + rscol + ' REGEXP %s'
-            val = (mid+'[[:>:]]',)
+        if self.br.rowcount == 0 and 'rs' in anid: # or len(res)
+            where = ' WHERE ' + rscol + ' REGEXP %s'
+            q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
+            val = (anid+'[[:>:]]',)
             self.br.execute(q,val)
             res = self.br.fetchall()
+        if self.br.rowcount > 0:
+            return where,val,rscol
+
+    def mtab_change_pos(self,anid,oldpos,newpos):
+        where,val,rscol = self.mtab_get_where_string(anid)
+        q = 'UPDATE ' + self.tabname + ' SET chr = %s ' + where 
+        val = (newpos,) + val
+        #print(q % val)
+        #self.br.execute(q,val)
+        #res = self.br.fetchall()
+        #res = ['|'.join(row) for row in res]
+
+    def swapout_main(self,swin,swout):
+        pass
+
+    def pos_flag(self,mid,chrpos,fl=-5,supp=True):
+        vals = (fl,mid,'38',chrpos,-1)
+        q = 'UPDATE positions SET chosen = %s WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s AND chosen > %s'
+        if supp:
+            return
+        self.omics.execute(q,vals)
+
+    def addpos(self,mid,chrpos,ds,build='38',supp=True):
+        chrm = chrpos.split(':')[0]
+        pos = int(chrpos.split(':')[1])
+        q = 'INSERT IGNORE INTO positions (id, chr, pos, build, datasource) VALUES (%s,%s,%s,%s,%s)'
+        vals = (mid,chrm,pos,build,ds)
+        if supp:
+            return
+        self.omics.execute(q,vals)
+    
+    def checkbr_pos(self,mid,chrpos=None):
+        where,val,rscol = self.mtab_get_where_string(mid)
+        q = 'SELECT chr FROM ' + self.tabname + where
+        self.br.execute(q,val)
+        res = self.br.fetchall()
         res = [s[0] for s in res]
         if not chrpos:
-            return res
+            return [None,res]
         if chrpos in res:
             return [True,res]
         return [False,res]
@@ -108,7 +131,7 @@ class ProcFile(Types):
         res = self.omics.fetchall()
         res = [s[0] + ':'+ str(s[1]) for s in res]
         if not chrpos:
-            return res
+            return [None,res]
         if chrpos in res:
             return [True,res]
         return [False,res]

@@ -12,7 +12,7 @@ class Types:
         count = 0
         for line in self.inp.read():
             count+=1
-            if count == 15:
+            if count == 60:
                 break
             #print(line)
             new_current = re.split('Current',line)
@@ -23,7 +23,7 @@ class Types:
             if newmchk['withdrawn']:
                 if not curmchk['withdrawn']:
                     report.write('map table %s is withdrawn from dbsnp, use omics db %s instead\n' % (newrs,currs))
-                    self.add_alt(alt=newrs,main=currs)
+                    self.add_alt(alt=newrs,main=currs,ds=self.tabname)
                     self.mtab_change_id(xsting=newrs,chngto=currs)
                 else:
                     report.write('map table %s AND omics db %s are withdrawn from dbsnp\n' % (newrs,currs))
@@ -36,7 +36,7 @@ class Types:
             newtocurr = self.frominto(evenarr=mergelist,bfor=newrs,aftr=currs)
             if newtocurr['correct']:
                 report.write("map table %s merged into omics db %s, use %s\n" % (newrs,currs,currs))
-                self.add_alt(alt=newrs,main=currs)
+                self.add_alt(alt=newrs,main=currs,ds=self.tabname)
                 self.mtab_change_id(xsting=newrs,chngto=currs)
                 continue
             currtonew = self.frominto(evenarr=mergelist,bfor=currs,aftr=newrs)
@@ -69,6 +69,27 @@ class Types:
                 self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=ds_chrpos)
                 continue
             # if reached here then newrsb38 == currsb38 but they weren't found in either merge list so they are probably different at the variant type level
+            dbpos = self.checkom_pos(mid=currs)[1]
+            mapos = self.checkbr_pos(mid=newrs)[1]
+            allpos = [currsb38] + dbpos + mapos
+            allpos = list(dict.fromkeys(allpos))
+            if len(allpos) == 1: # all chr:pos agree
+                self.add_alt(alt=newrs,main=currs,ds=self.tabname)
+                report.write('map table %s and omics %s have the same position on dbsnp and with each other. map table %s to be added as alt id to omics %s. They are likely to be a different variant-type\n' % (newrs,currs,newrs,currs))
+                continue
+            badpos = [ps for ps in allpos if ps != currsb38]
+            dbadpos = [ps for ps in badpos if ps in dbpos]
+            mapbadpos = [ps for ps in badpos if ps in mapos]
+            for dbbd in dbadpos:
+                print('omics position for %s is wrong against dbsnp. dbsnp = %s. omics = %s. Entry to be flagged if not already' % (currs,currsb38,dbbd))
+                self.pos_flag(mid=currs,chrpos=dbbd,fl=-5)
+            if currsb38 not in dbpos:
+                print('dbsnp position %s for omics id %s not in omics positions table. To be added' % (currsb38,currs))
+                self.addpos(mid=currs,chrpos=currsb38,ds='dbsnp',build='38')
+            for mapbp in mapbadpos:
+                print('map table position for %s is wrong against dbsnp. dbsnp = %s. map table = %s.' % (newrs,currsb38,mapbp))
+                self.mtab_change_pos(anid=newrs,oldpos=mapbp,newpos=currsb38)
+            #if currsb38 not in dbpos: add it .... also newrs to be added as alt_id
             print("no action coded for map table %s and omics db %s" % (newrs,currs))
         report.close()
         self.extra_map_f.close()
