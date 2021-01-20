@@ -81,16 +81,16 @@ class Types:
             dbadpos = [ps for ps in badpos if ps in dbpos]
             mapbadpos = [ps for ps in badpos if ps in mapos]
             for dbbd in dbadpos:
-                print('omics position for %s is wrong against dbsnp. dbsnp = %s. omics = %s. Entry to be flagged if not already' % (currs,currsb38,dbbd))
+                report.write('omics position for %s is wrong against dbsnp. dbsnp = %s. omics = %s. Entry to be flagged if not already\n' % (currs,currsb38,dbbd))
                 self.pos_flag(mid=currs,chrpos=dbbd,fl=-5)
             if currsb38 not in dbpos:
-                print('dbsnp position %s for omics id %s not in omics positions table. To be added' % (currsb38,currs))
+                report.write('dbsnp position %s for omics id %s not in omics positions table. To be added\n' % (currsb38,currs))
                 self.addpos(mid=currs,chrpos=currsb38,ds='dbsnp',build='38')
             for mapbp in mapbadpos:
-                print('map table position for %s is wrong against dbsnp. dbsnp = %s. map table = %s.' % (newrs,currsb38,mapbp))
+                report.write('map table position for %s is wrong against dbsnp. dbsnp = %s. map table = %s. map table coord to be changed/added\n' % (newrs,currsb38,mapbp))
                 self.mtab_change_pos(anid=newrs,oldpos=mapbp,newpos=currsb38)
-            #if currsb38 not in dbpos: add it .... also newrs to be added as alt_id
-            print("no action coded for map table %s and omics db %s" % (newrs,currs))
+            self.add_alt(alt=newrs,main=currs,ds=self.tabname)
+            report.write("omics id %s and map table id %s have the same coord in dbsnp. map table id %s to be added to omics id %s as alt_id\n" % (currs,newrs,newrs,currs))
         report.close()
         self.extra_map_f.close()
 

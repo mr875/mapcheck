@@ -86,8 +86,8 @@ class ProcFile(Types):
 
     def mtab_change_pos(self,anid,oldpos,newpos):
         where,val,rscol = self.mtab_get_where_string(anid)
-        q = 'UPDATE ' + self.tabname + ' SET chr = %s ' + where 
-        val = (newpos,) + val
+        q = 'UPDATE ' + self.tabname + ' SET chr = %s ' + where + ' AND chr = %s'
+        val = (newpos,) + val + (oldpos,)
         #print(q % val)
         #self.br.execute(q,val)
         #res = self.br.fetchall()
