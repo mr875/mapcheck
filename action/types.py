@@ -4,7 +4,15 @@ class Types:
 
     maketable = 'CREATE TABLE IF NOT EXISTS extra_map (newid char(20) NOT NULL,linkid char(38) NOT NULL,chr char(4) DEFAULT NULL,GRCh38_pos int unsigned DEFAULT NULL,flank_seq varchar(1040) DEFAULT NULL,datasource varchar(40) NOT NULL,ds_chrpos varchar(20) DEFAULT NULL,chosen TINYINT DEFAULT 0,PRIMARY KEY (newid,linkid,datasource))'
 
-    def newaltrs(self):
+    def percent_comp(self,current,perc,total=0):
+        if not total:
+            total = self.inp.row_count
+        steps = int((perc/100.0)*total)
+        #print('%s & %s' % (current,steps))
+        if current % steps == 0:
+            print('%s of %s (%s percent) done' % (current,total,int((current/total)*100)))
+
+    def newaltrs(self,brk=0):
         #rs id not found in db but db already has another rs id for that variant
         report = open('report_newaltr_' + self.ts + '.txt',"w")
         self.extra_map_f = open('extra_map_' + self.ts + '.sql',"w")
@@ -12,9 +20,10 @@ class Types:
         count = 0
         for line in self.inp.read():
             count+=1
-            if count == 60:
+            if brk and count == brk:
                 break
             #print(line)
+            self.percent_comp(current=count,perc=10,total=brk)
             new_current = re.split('Current',line)
             newrs = self.grabrsinp(new_current[0])
             currs = self.grabrsinp(new_current[1])
@@ -52,7 +61,7 @@ class Types:
                 chosen = 0
                 ds_chrpos = None
                 if not checkom[0]:
-                    report.write('map table %s linked via alt id to omics db %s but they do not have the same chrpos in dbsnp. omics chrpos of %s does not match dbsnp. entry will be flagged in positions table. map table rs added to extra_map\n' % (newrs,currs,currs))
+                    report.write('map table %s linked via alt id to omics db %s but they do not have the same chrpos in dbsnp. omics chrpos of %s does not match dbsnp. entry will be flagged in positions table. dbsnp position %s will be added to positions table under %s. map table rs added to extra_map\n' % (newrs,currs,currs,currsb38,currs))
                     ch_count+=1
                     om_chrpos = list(dict.fromkeys(checkom[1]))
                     [self.pos_flag(currs,om_cp) for om_cp in om_chrpos]
@@ -65,7 +74,7 @@ class Types:
                     ds_chrpos = list(dict.fromkeys(checkbr[1]))
                     ds_chrpos=','.join(ds_chrpos)
                 if ch_count == 0 or ch_count == 2:
-                   print('newrsb38 != currsb38, %s x reporting. check %s/%s' % (ch_count,newrs,currs)) 
+                   print('newrsb38 != currsb38, %s x reporting for %s/%s' % (ch_count,newrs,currs)) 
                 self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=ds_chrpos)
                 continue
             # if reached here then newrsb38 == currsb38 but they weren't found in either merge list so they are probably different at the variant type level

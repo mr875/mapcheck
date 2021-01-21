@@ -13,12 +13,17 @@ class ProcFile(Types):
         self.omics = omics
         self.br = br
         self.tabname = tabname
+        brk=10
         print("line count",self.inp.row_count)
+        self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
+        self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
         if 'map_new_alt_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
-                self.newaltrs()
+                self.newaltrs(brk=brk)
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_alt_rs.sh',self.inp.bfile,'out_map_new_alt_rs.txt'))
+        self.dbact_om.close()
+        self.dbact_br.close()
 
     def grabrsinp(self,col):
         rs = re.search("(?:\()(rs[0-9]+)(?:\))", col)
