@@ -39,7 +39,7 @@ class Types:
                 continue   
             if curmchk['withdrawn']:
                 report.write('omics db %s is withdrawn. map table %s to be used in omics db\n' % (currs,newrs))
-                self.swapout_main(swin=newrs,swout=currs)
+                self.swapout_main(swin=newrs,swout=currs,ds=self.tabname)
                 continue
             mergelist = newmchk['merges'] + curmchk['merges']
             newtocurr = self.frominto(evenarr=mergelist,bfor=newrs,aftr=currs)
@@ -51,7 +51,7 @@ class Types:
             currtonew = self.frominto(evenarr=mergelist,bfor=currs,aftr=newrs)
             if currtonew['correct']:
                 report.write("omics db %s merged into map table %s, omics db to take %s\n" % (currs,newrs,newrs))
-                self.swapout_main(swin=newrs,swout=currs)
+                self.swapout_main(swin=newrs,swout=currs,ds=self.tabname)
                 continue
             newrsb38 = self.getb38(new_current[0]) 
             currsb38 = self.getb38(new_current[1])

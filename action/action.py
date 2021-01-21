@@ -98,8 +98,23 @@ class ProcFile(Types):
         #res = self.br.fetchall()
         #res = ['|'.join(row) for row in res]
 
-    def swapout_main(self,swin,swout):
-        pass
+    def swapout_main(self,swin,swout,ds):
+        q = 'SELECT uid_datasource FROM consensus WHERE id = %s'
+        val = (swout,)
+        self.omics.execute(q,val)
+        res = self.omics.fetchall()
+        res = [rs[0] for rs in res if len(rs) > 0]
+        if len(res) != 1:
+            raise Exception('failed/unexpected result:' + q % val)
+        swout_ds = res[0]
+        self.dbact_om.write('UPDATE consensus SET id = \'%s\', uid_datasource = \'%s\' WHERE id = \'%s\';\n' % (swin,ds,swout))
+        self.dbact_om.write('UPDATE alt_ids SET id = \'%s\' WHERE id = \'%s\';\n' % (swin,swout))
+        self.dbact_om.write('UPDATE flank SET id = \'%s\' WHERE id = \'%s\';\n' % (swin,swout))
+        self.dbact_om.write('UPDATE positions SET id = \'%s\' WHERE id = \'%s\';\n' % (swin,swout))
+        self.dbact_om.write('UPDATE probes SET id = \'%s\' WHERE id = \'%s\';\n' % (swin,swout))
+        self.dbact_om.write('UPDATE snp_present SET id = \'%s\' WHERE id = \'%s\';\n' % (swin,swout))
+        self.dbact_om.write('INSERT INTO alt_ids (id, alt_id, datasource) VALUES (\'%s\',\'%s\',\'%s\');\n' % (swin,swout,swout_ds))
+        self.dbact_om.write('--\n')
 
     def pos_flag(self,mid,chrpos,fl=-5,supp=True):
         vals = (fl,mid,'38',chrpos,-1)
