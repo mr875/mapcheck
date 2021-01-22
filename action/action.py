@@ -14,7 +14,8 @@ class ProcFile(Types):
         self.br = br
         self.tabname = tabname
         self.reportmode = reportmode
-        brk=2
+        self.make_extra_map_table()
+        brk=10
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
@@ -25,6 +26,16 @@ class ProcFile(Types):
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_alt_rs.sh',self.inp.bfile,'out_map_new_alt_rs.txt'))
         self.dbact_om.close()
         self.dbact_br.close()
+
+    def make_extra_map_table(self):
+        if self.reportmode:
+            return
+        q = 'SELECT COUNT(*) FROM information_schema.tables WHERE table_name = %s'
+        val = ('extra_map',)
+        self.omics.execute(q,val)
+        if self.omics.fetchone()[0] == 0:
+            maketable = 'CREATE TABLE IF NOT EXISTS extra_map (newid char(20) NOT NULL,linkid char(38) NOT NULL,chr char(4) DEFAULT NULL,GRCh38_pos int unsigned DEFAULT NULL,flank_seq varchar(1040) DEFAULT NULL,datasource varchar(40) NOT NULL,ds_chrpos varchar(20) DEFAULT NULL,chosen TINYINT DEFAULT 0,PRIMARY KEY (newid,linkid,datasource))'
+            self.omics.execute(maketable)
 
     def grabrsinp(self,col):
         rs = re.search("(?:\()(rs[0-9]+)(?:\))", col)
@@ -66,7 +77,6 @@ class ProcFile(Types):
         return rslt.group(1) # will need handling: AttributeError: 'NoneType' object has no attribute 'group'
 
     def add_alt(self,alt,main,ds):
-        print('entered add_alt to add %s as alt_id to %s (ds %s)' % (alt,main,ds))
         if self.reportmode:
             return
         vals = (main,alt)
@@ -83,7 +93,7 @@ class ProcFile(Types):
             self.omics.execute(q,vals)
         except:
             e = sys.exc_info()
-            self.dbact_om.write( "Error trying to insert %s as alt id to %s\t%s\n" % (alt_id,main,e))
+            self.dbact_om.write( "-- Error trying to insert %s as alt id to %s\t%s\n" % (alt_id,main,e))
 
     def mtab_change_id(self,xsting,chngto):
         pass
@@ -162,21 +172,34 @@ class ProcFile(Types):
         self.dbact_om.write('INSERT INTO alt_ids (id, alt_id, datasource) VALUES (\'%s\',\'%s\',\'%s\');\n' % (swin,swout,swout_ds))
         self.dbact_om.write('--\n')
 
-    def pos_flag(self,mid,chrpos,fl=-5,supp=True):
+    def pos_flag(self,mid,chrpos,fl=-5):
+        if self.reportmode:
+            return
         vals = (fl,mid,'38',chrpos,-1)
         q = 'UPDATE positions SET chosen = %s WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s AND chosen > %s'
-        if supp:
-            return
         self.omics.execute(q,vals)
 
-    def addpos(self,mid,chrpos,ds,build='38',supp=True):
+    def addpos(self,mid,chrpos,ds,build='38'):
+        print('entered addpos to add %s to %s (ds %s)' % (chrpos,mid,ds))
+        if self.reportmode:
+            return
+        q = 'SELECT * FROM positions WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s'
+        vals = (mid,build,chrpos)
+        self.omics.execute(q,vals)
+        res = self.omics.fetchall()
+        if len(res) > 0:
+            res = ['|'.join([str(s) for s in st]) for st in res]
+            self.dbact_om.write('-- Error adding position %s to %s (ds %s) because its already there: %s\n' % (chrpos,mid,ds,'\t'.join(res)))
+            return
         chrm = chrpos.split(':')[0]
         pos = int(chrpos.split(':')[1])
-        q = 'INSERT IGNORE INTO positions (id, chr, pos, build, datasource) VALUES (%s,%s,%s,%s,%s)'
+        q = 'INSERT INTO positions (id, chr, pos, build, datasource) VALUES (%s,%s,%s,%s,%s)'
         vals = (mid,chrm,pos,build,ds)
-        if supp:
-            return
-        self.omics.execute(q,vals)
+        try:
+            self.omics.execute(q,vals)
+        except:
+            e = sys.exc_info()
+            self.dbact_om.write( "-- Error trying to add position %s to %s (ds %s): %s\n" % (chrpos,mid,ds,e))
     
     def checkbr_pos(self,mid,chrpos=None):
         where,val,rscol = self.mtab_get_where_string(mid)
@@ -203,13 +226,19 @@ class ProcFile(Types):
         return [False,res]
 
     def extra_map(self,newid,linkid,chrpos,datasource,chosen,ds_chrpos=None):
+        print('entered extra map to add %s to %s with flag %s' % (newid,linkid,str(chosen)))
+        if self.reportmode:
+            return
         chrm = chrpos.split(':')[0]
         pos = chrpos.split(':')[1]
+        q = "INSERT IGNORE INTO extra_map (newid,linkid,chr,GRCh38_pos,datasource,ds_chrpos,chosen) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+        vals = (newid,linkid,chrm,pos,datasource,ds_chrpos,chosen)
         if not ds_chrpos:
-            q = "INSERT IGNORE INTO extra_map (newid,linkid,chr,GRCh38_pos,datasource,chosen) VALUES ('%s','%s','%s','%s','%s',%s)"
-            vals = (newid,linkid,chrm,pos,datasource,str(chosen))
-        else:
-            q = "INSERT IGNORE INTO extra_map (newid,linkid,chr,GRCh38_pos,datasource,ds_chrpos,chosen) VALUES ('%s','%s','%s','%s','%s','%s',%s)"
-            vals = (newid,linkid,chrm,pos,datasource,ds_chrpos,str(chosen))
-        self.extra_map_f.write((q+';\n') % vals)
+            q = "INSERT IGNORE INTO extra_map (newid,linkid,chr,GRCh38_pos,datasource,chosen) VALUES (%s,%s,%s,%s,%s,%s)"
+            vals = (newid,linkid,chrm,pos,datasource,chosen)
+        try:
+            self.omics.execute(q,vals)
+        except:
+            e = sys.exc_info()
+            self.dbact_om.write( "-- Error trying to add %s to extra_map under %s:\t%s\n" % (newid,linkid,e))
 

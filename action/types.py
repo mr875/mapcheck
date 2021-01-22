@@ -2,8 +2,6 @@ import re
 
 class Types:
 
-    maketable = 'CREATE TABLE IF NOT EXISTS extra_map (newid char(20) NOT NULL,linkid char(38) NOT NULL,chr char(4) DEFAULT NULL,GRCh38_pos int unsigned DEFAULT NULL,flank_seq varchar(1040) DEFAULT NULL,datasource varchar(40) NOT NULL,ds_chrpos varchar(20) DEFAULT NULL,chosen TINYINT DEFAULT 0,PRIMARY KEY (newid,linkid,datasource))'
-
     def percent_comp(self,current,perc,total=0):
         if not total:
             total = self.inp.row_count
@@ -18,8 +16,6 @@ class Types:
     def newaltrs(self,brk=0):
         #rs id not found in db but db already has another rs id for that variant
         report = open('report_newaltr_' + self.ts + '.txt',"w")
-        self.extra_map_f = open('extra_map_' + self.ts + '.sql',"w")
-        self.extra_map_f.write(self.maketable+';\n')
         count = 0
         for line in self.inp.read():
             count+=1
@@ -77,7 +73,7 @@ class Types:
                     ds_chrpos = list(dict.fromkeys(checkbr[1]))
                     ds_chrpos=','.join(ds_chrpos)
                 if ch_count == 0 or ch_count == 2:
-                   print('newrsb38 != currsb38, %s x reporting for %s/%s' % (ch_count,newrs,currs)) 
+                    print('newrsb38 != currsb38, %s x reporting for %s/%s' % (ch_count,newrs,currs)) 
                 self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=ds_chrpos)
                 continue
             # if reached here then newrsb38 == currsb38 but they weren't found in either merge list so they are probably different at the variant type level
@@ -104,5 +100,4 @@ class Types:
             self.add_alt(alt=newrs,main=currs,ds=self.tabname)
             report.write("omics id %s and map table id %s have the same coord in dbsnp. map table id %s to be added to omics id %s as alt_id\n" % (currs,newrs,newrs,currs))
         report.close()
-        self.extra_map_f.close()
 
