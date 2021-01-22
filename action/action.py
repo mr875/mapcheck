@@ -15,10 +15,11 @@ class ProcFile(Types):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=10
+        brk=65
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
+        self.actbr_poschng = set()
         if 'map_new_alt_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
                 self.newaltrs(brk=brk)
@@ -118,10 +119,16 @@ class ProcFile(Types):
             return where,val,rscol
 
     def mtab_change_pos(self,anid,oldpos,newpos):
+        print('entered mtab_change_pos for changing the chr:pos of %s from %s to %s' % (anid,oldpos,newpos))
+        if anid in self.actbr_poschng:
+            return
         where,val,rscol = self.mtab_get_where_string(anid)
         q = 'UPDATE ' + self.tabname + ' SET chr = %s ' + where + ' AND chr = %s'
         val = (newpos,) + val + (oldpos,)
-        #print(q % val)
+        q = q.replace('%s','\'%s\'')
+        print(q % val)
+        self.dbact_br.write((q+';\n') % val)
+        self.actbr_poschng.add(anid)
         #self.br.execute(q,val)
         #res = self.br.fetchall()
         #res = ['|'.join(row) for row in res]
@@ -180,7 +187,6 @@ class ProcFile(Types):
         self.omics.execute(q,vals)
 
     def addpos(self,mid,chrpos,ds,build='38'):
-        print('entered addpos to add %s to %s (ds %s)' % (chrpos,mid,ds))
         if self.reportmode:
             return
         q = 'SELECT * FROM positions WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s'
@@ -226,7 +232,6 @@ class ProcFile(Types):
         return [False,res]
 
     def extra_map(self,newid,linkid,chrpos,datasource,chosen,ds_chrpos=None):
-        print('entered extra map to add %s to %s with flag %s' % (newid,linkid,str(chosen)))
         if self.reportmode:
             return
         chrm = chrpos.split(':')[0]

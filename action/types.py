@@ -72,8 +72,6 @@ class Types:
                     chosen = -1
                     ds_chrpos = list(dict.fromkeys(checkbr[1]))
                     ds_chrpos=','.join(ds_chrpos)
-                if ch_count == 0 or ch_count == 2:
-                    print('newrsb38 != currsb38, %s x reporting for %s/%s' % (ch_count,newrs,currs)) 
                 self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=ds_chrpos)
                 continue
             # if reached here then newrsb38 == currsb38 but they weren't found in either merge list so they are probably different at the variant type level
