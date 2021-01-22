@@ -20,8 +20,12 @@ def main(argv):
         tabname = argv[1]
     except IndexError:
         sys.exit("provide file_name and map table as arguments.eg:\npy fileproc.py out_files_corexome/out_sh/out_map_new_alt_rs.txt coreexome_map")
+    repmode = True
+    if len(argv) == 3:
+        if 'False' in argv[2]:
+            repmode = False # add switch to command line to execute db commands
     try:
-        pf = ProcFile(fname,tabname,omcurs,brcurs)
+        pf = ProcFile(fname,tabname,omcurs,brcurs,repmode)
     finally:
         omics.commit()
         omics.close()

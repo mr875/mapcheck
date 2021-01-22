@@ -9,8 +9,11 @@ class Types:
             total = self.inp.row_count
         steps = int((perc/100.0)*total)
         #print('%s & %s' % (current,steps))
-        if current % steps == 0:
-            print('%s of %s (%s percent) done' % (current,total,int((current/total)*100)))
+        try:
+            if current % steps == 0:
+                print('%s of %s (%s percent) done' % (current,total,int((current/total)*100)))
+        except ZeroDivisionError:
+            pass
 
     def newaltrs(self,brk=0):
         #rs id not found in db but db already has another rs id for that variant

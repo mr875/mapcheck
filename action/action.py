@@ -7,13 +7,14 @@ from utils.queryfile import QueryFile, NormFile
 
 class ProcFile(Types):
 
-    def __init__(self,fname,tabname,omics,br):
+    def __init__(self,fname,tabname,omics,br,reportmode=True):
         self.inp = NormFile(fname)
         self.ts = datetime.now().strftime("%d%b_%Hhr")
         self.omics = omics
         self.br = br
         self.tabname = tabname
-        brk=10
+        self.reportmode = reportmode
+        brk=2
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
@@ -65,7 +66,24 @@ class ProcFile(Types):
         return rslt.group(1) # will need handling: AttributeError: 'NoneType' object has no attribute 'group'
 
     def add_alt(self,alt,main,ds):
-        pass
+        print('entered add_alt to add %s as alt_id to %s (ds %s)' % (alt,main,ds))
+        if self.reportmode:
+            return
+        vals = (main,alt)
+        q = 'SELECT * FROM alt_ids WHERE id = %s AND alt_id = %s'
+        self.omics.execute(q,vals)
+        res = self.omics.fetchall()
+        if len(res) > 0:
+            res = ['|'.join(st) for st in res]
+            self.dbact_om.write('-- failed to add %s as alt id to %s (ds %s) because it is already present: %s\n' % (alt,main,ds,'\t'.join(res)))
+            return
+        vals = (main,alt,ds)
+        q = 'INSERT INTO alt_ids (id, alt_id, datasource) VALUES (%s,%s,%s)'
+        try:
+            self.omics.execute(q,vals)
+        except:
+            e = sys.exc_info()
+            self.dbact_om.write( "Error trying to insert %s as alt id to %s\t%s\n" % (alt_id,main,e))
 
     def mtab_change_id(self,xsting,chngto):
         pass
@@ -99,14 +117,42 @@ class ProcFile(Types):
         #res = ['|'.join(row) for row in res]
 
     def swapout_main(self,swin,swout,ds):
+        if self.reportmode:
+            return
         q = 'SELECT uid_datasource FROM consensus WHERE id = %s'
         val = (swout,)
         self.omics.execute(q,val)
         res = self.omics.fetchall()
         res = [rs[0] for rs in res if len(rs) > 0]
         if len(res) != 1:
-            raise Exception('failed/unexpected result:' + q % val)
+            val = (swin,swout) + val
+            self.dbact_om.write(('-- failed to swap in %s for %s because it may have been swapped already: ' + q + ';\n') % val)
+            return
         swout_ds = res[0]
+        try:
+            vals = (swin,ds,swout)
+            q = 'UPDATE consensus SET id = %s, uid_datasource = %s WHERE id = %s'
+            self.omics.execute(q,vals)
+            vals = (swin,swout)
+            q = 'UPDATE alt_ids SET id = %s WHERE id = %s'
+            self.omics.execute(q,vals)
+            q = 'UPDATE flank SET id = %s WHERE id = %s'
+            self.omics.execute(q,vals)
+            q = 'UPDATE positions SET id = %s WHERE id = %s'
+            self.omics.execute(q,vals)
+            q = 'UPDATE probes SET id = %s WHERE id = %s'
+            self.omics.execute(q,vals)
+            q = 'UPDATE snp_present SET id = %s WHERE id = %s'
+            self.omics.execute(q,vals)
+            vals = (swin,swout,swout_ds)
+            q = 'INSERT INTO alt_ids (id,alt_id,datasource) VALUES (%s,%s,%s)'
+            self.omics.execute(q,vals)
+        except:
+            e = sys.exc_info()
+            self.dbact_om.write( "Error trying to swap in %s for %s: %s:\n" % (swin,swout,e))
+            self.swapout_main_write(swin,swout,ds,swout_ds)
+
+    def swapout_main_write(self,swin,swout,ds,swout_ds):
         self.dbact_om.write('UPDATE consensus SET id = \'%s\', uid_datasource = \'%s\' WHERE id = \'%s\';\n' % (swin,ds,swout))
         self.dbact_om.write('UPDATE alt_ids SET id = \'%s\' WHERE id = \'%s\';\n' % (swin,swout))
         self.dbact_om.write('UPDATE flank SET id = \'%s\' WHERE id = \'%s\';\n' % (swin,swout))
