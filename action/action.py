@@ -15,11 +15,12 @@ class ProcFile(Types):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=65
+        brk=0
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
         self.actbr_poschng = set()
+        self.actbr_idchng = set()
         if 'map_new_alt_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
                 self.newaltrs(brk=brk)
@@ -97,37 +98,54 @@ class ProcFile(Types):
             self.dbact_om.write( "-- Error trying to insert %s as alt id to %s\t%s\n" % (alt_id,main,e))
 
     def mtab_change_id(self,xsting,chngto):
-        pass
+        if xsting in self.actbr_idchng:
+            print('entered mtab_change_id to change %s to %s but id %s has been edited already in this session' % (xsting,chngto,xsting))
+            return
+        where,val,colwithid,res = self.mtab_get_where_string(xsting)
+        where = where.replace('%s','\'%s\'') + ';\n'
+        if colwithid != 'snp':
+            res = [rs[1] for rs in res]
+            rs_ls = []
+            for rs in res:
+                rs_ls.extend(re.findall("rs[0-9]+", rs))
+            rs_ls = list(dict.fromkeys(rs_ls))
+            rs_ls = [rs for rs in rs_ls if rs != xsting and rs != chngto]
+            rs_ls.append(chngto)
+            chngto = ','.join(rs_ls)
+        q = 'UPDATE ' + self.tabname + ' SET '  + colwithid + ' = \'' + chngto + '\'' + where
+        self.dbact_br.write(q % val)
+        self.actbr_idchng.add(xsting)
 
     def mtab_get_where_string(self,anid):
         if 'ukbbaffy_v2_1_map' in self.tabname:
             rscol = 'chipid'
         else:
             rscol = 'dbsnpid'
-        where = ' WHERE snp = %s'
+        colwithid = 'snp'
+        where = ' WHERE ' + colwithid + ' = %s'
         q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
         val = (anid,)
         self.br.execute(q,val)
         res = self.br.fetchall()
         if self.br.rowcount == 0 and 'rs' in anid: # or len(res)
+            colwithid = rscol
             where = ' WHERE ' + rscol + ' REGEXP %s'
             q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
             val = (anid+'[[:>:]]',)
             self.br.execute(q,val)
             res = self.br.fetchall()
         if self.br.rowcount > 0:
-            return where,val,rscol
+            return where,val,colwithid,res
 
     def mtab_change_pos(self,anid,oldpos,newpos):
-        print('entered mtab_change_pos for changing the chr:pos of %s from %s to %s' % (anid,oldpos,newpos))
         if anid in self.actbr_poschng:
+            print('entered mtab_change_pos but id %s has been edited already in this session' % (anid))
             return
-        where,val,rscol = self.mtab_get_where_string(anid)
+        where,val,rscol,res = self.mtab_get_where_string(anid)
         q = 'UPDATE ' + self.tabname + ' SET chr = %s ' + where + ' AND chr = %s'
         val = (newpos,) + val + (oldpos,)
-        q = q.replace('%s','\'%s\'')
-        print(q % val)
-        self.dbact_br.write((q+';\n') % val)
+        q = q.replace('%s','\'%s\'') + ';\n'
+        self.dbact_br.write((q) % val)
         self.actbr_poschng.add(anid)
         #self.br.execute(q,val)
         #res = self.br.fetchall()
@@ -208,11 +226,11 @@ class ProcFile(Types):
             self.dbact_om.write( "-- Error trying to add position %s to %s (ds %s): %s\n" % (chrpos,mid,ds,e))
     
     def checkbr_pos(self,mid,chrpos=None):
-        where,val,rscol = self.mtab_get_where_string(mid)
+        where,val,rscol,res = self.mtab_get_where_string(mid)
         q = 'SELECT chr FROM ' + self.tabname + where
         self.br.execute(q,val)
-        res = self.br.fetchall()
-        res = [s[0] for s in res]
+        res = self.br.fetchall() # or use initial res which has cols: snp,dbsnpid,chr
+        res = [s[0] for s in res] 
         if not chrpos:
             return [None,res]
         if chrpos in res:
