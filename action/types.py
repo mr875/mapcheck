@@ -54,6 +54,15 @@ class Types:
                 continue
             newrsb38 = self.getb38(new_current[0]) 
             currsb38 = self.getb38(new_current[1])
+            if not newrsb38 and not currsb38: #can't get dbsnp pos for both
+                raise Exception('can not get dbsnp b38 coord for map table %s OR omics db %s. Uncoded scenario at the moment' % (newrs,currs))
+            if not newrsb38 or not currsb38: #can't get dbsnp for one
+                br_pos = self.checkbr_pos(newrs)[1]
+                om_pos = self.checkom_pos(currs)[1]
+                if not newrsb38:
+                    print('can\'t get dbsnp position for map table %s. omics db %s ok' % (newrs,currs))
+                    print(br_pos,om_pos)
+                    continue
             if newrsb38 != currsb38:
                 ch_count = 0
                 checkom = self.checkom_pos(mid=currs,chrpos=currsb38)

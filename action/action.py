@@ -15,7 +15,7 @@ class ProcFile(Types):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=0
+        brk=10
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
@@ -48,6 +48,8 @@ class ProcFile(Types):
 
     def mergecheck(self,col):
         rside = re.search("(?:[mM]erges?:)(.+)",col)
+        if not rside:
+            return {'withdrawn':False,'merges':[]}
         rside = rside.group(1)
         if 'rs' not in rside:
             return {'withdrawn':False,'merges':[]}
@@ -76,6 +78,8 @@ class ProcFile(Types):
 
     def getb38(self,container):
         rslt = re.search('(?:b38=)(\S+)',container)
+        if not rslt:
+            return None
         return rslt.group(1) # will need handling: AttributeError: 'NoneType' object has no attribute 'group'
 
     def add_alt(self,alt,main,ds):
@@ -227,10 +231,12 @@ class ProcFile(Types):
     
     def checkbr_pos(self,mid,chrpos=None):
         where,val,rscol,res = self.mtab_get_where_string(mid)
-        q = 'SELECT chr FROM ' + self.tabname + where
-        self.br.execute(q,val)
-        res = self.br.fetchall() # or use initial res which has cols: snp,dbsnpid,chr
-        res = [s[0] for s in res] 
+#        q = 'SELECT chr FROM ' + self.tabname + where
+#        self.br.execute(q,val)
+#        res = self.br.fetchall() # or use initial res which has cols: snp,dbsnpid,chr
+#        res = [s[0] for s in res] 
+        res = [s[2] for s in res] 
+        res = list(dict.fromkeys(res))
         if not chrpos:
             return [None,res]
         if chrpos in res:
@@ -243,6 +249,7 @@ class ProcFile(Types):
         self.omics.execute(q,val)
         res = self.omics.fetchall()
         res = [s[0] + ':'+ str(s[1]) for s in res]
+        res = list(dict.fromkeys(res))
         if not chrpos:
             return [None,res]
         if chrpos in res:
