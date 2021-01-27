@@ -56,11 +56,16 @@ class Types:
             currsb38 = self.getb38(new_current[1])
             if not newrsb38 and not currsb38: #can't get dbsnp pos for both
                 raise Exception('can not get dbsnp b38 coord for map table %s OR omics db %s. Uncoded scenario at the moment' % (newrs,currs))
+                br_pos = self.checkbr_pos(newrs)[1]
+                om_pos = self.checkom_pos(currs)[1]
+                overlap = [ol for ol in br_pos if ol in ompos]
+                # if not overlap: 
+                # if overlap:
+                #continue
             if not newrsb38 or not currsb38: #can't get dbsnp for one
                 br_pos = self.checkbr_pos(newrs)[1]
                 om_pos = self.checkom_pos(currs)[1]
                 if not newrsb38: #have dbsnp pos for omics version
-                    print(br_pos,om_pos)
                     bad_om_pos = [bp for bp in om_pos if bp != currsb38]
                     if len(bad_om_pos) == len(om_pos): # same as- if currsb38 not in om_pos:
                         print('unchecked innoncinnill: dbsnp position %s for omics id %s not in omics positions table. To be added\n' % (currsb38,currs))
@@ -74,8 +79,11 @@ class Types:
                     else:
                         report.write('position for map table id %s is not found in dbsnp. Corresponding omics id %s, has its position available in dbsnp which matches map table version. omics db id dbsnp pos = %s. map table id position = %s. Adding %s as alt_id\n' % (newrs,currs,currsb38,','.join(br_pos),newrs))
                         self.add_alt(alt=newrs,main=currs,ds=self.tabname)
-                else: # not currsb38
-                    pass
+                else: # not currsb38 but yes newrsb38
+                    bad_br_pos = [bp for bp in br_pos if bp != newrsb38]
+                    for bp in bad_br_pos:
+                        print('unchecked ncbyn: map table position for %s is wrong against dbsnp. dbsnp = %s. map table = %s. map table coord to be changed/added\n' % (newrs,newrsb38,bp))
+                        self.mtab_change_pos(anid=newrs,oldpos=bp,newpos=newrsb38)
                 continue
             if newrsb38 != currsb38:
                 ch_count = 0
