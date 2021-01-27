@@ -59,10 +59,24 @@ class Types:
             if not newrsb38 or not currsb38: #can't get dbsnp for one
                 br_pos = self.checkbr_pos(newrs)[1]
                 om_pos = self.checkom_pos(currs)[1]
-                if not newrsb38:
-                    print('can\'t get dbsnp position for map table %s. omics db %s ok' % (newrs,currs))
+                if not newrsb38: #have dbsnp pos for omics version
                     print(br_pos,om_pos)
-                    continue
+                    bad_om_pos = [bp for bp in om_pos if bp != currsb38]
+                    if len(bad_om_pos) == len(om_pos): # same as- if currsb38 not in om_pos:
+                        print('unchecked innoncinnill: dbsnp position %s for omics id %s not in omics positions table. To be added\n' % (currsb38,currs))
+                        self.addpos(mid=currs,chrpos=currsb38,ds='dbsnp',build='38')
+                    for bp in bad_om_pos:
+                        print('unchecked innoncinnfbib: omics position for %s is wrong against dbsnp. dbsnp = %s. omics = %s. Entry to be flagged if not already\n' % (currs,currsb38,bp))
+                        self.pos_flag(mid=currs,chrpos=bp,fl=-5)
+                    if currsb38 not in br_pos:
+                        print('unchecked innoncificnib: position for map table id %s (%s) not found in dbsnp. Corresponding omics id %s, has its position available in dbsnp, as non matching coord %s. May not be the same variant. Adding to extra_map\n' % (newrs,','.join(br_pos),currs,currsb38))
+                        self.extra_map(newid=newrs,linkid=currs,chrpos=None,datasource=self.tabname,chosen=-2,ds_chrpos=','.join(br_pos))
+                    else:
+                        report.write('position for map table id %s is not found in dbsnp. Corresponding omics id %s, has its position available in dbsnp which matches map table version. omics db id dbsnp pos = %s. map table id position = %s. Adding %s as alt_id\n' % (newrs,currs,currsb38,','.join(br_pos),newrs))
+                        self.add_alt(alt=newrs,main=currs,ds=self.tabname)
+                else: # not currsb38
+                    pass
+                continue
             if newrsb38 != currsb38:
                 ch_count = 0
                 checkom = self.checkom_pos(mid=currs,chrpos=currsb38)
