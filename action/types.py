@@ -21,7 +21,6 @@ class Types:
             count+=1
             if brk and count == brk:
                 break
-            #print(line)
             self.percent_comp(current=count,perc=10,total=brk)
             new_current = re.split('Current',line)
             newrs = self.grabrsinp(new_current[0])
@@ -59,9 +58,13 @@ class Types:
                 br_pos = self.checkbr_pos(newrs)[1]
                 om_pos = self.checkom_pos(currs)[1]
                 overlap = [ol for ol in br_pos if ol in ompos]
-                # if not overlap: 
-                # if overlap:
-                #continue
+                if not overlap: 
+                    print('unchecked innancino: dbsnp positions unavailable for map table id %s AND omics db id %s. Their db coordinates do not match (%s vs %s) so they may not be the same variant. Adding map table id to extra_map table\n' % (newrs,currs,','.join(br_pos),','.join(om_pos)))
+                    self.extra_map(newid=newrs,linkid=currs,chrpos=None,datasource=self.tabname,chosen=-1,ds_chrpos=','.join(br_pos))
+                else: # if overlap:
+                    print('unchecked innance: dbsnp positions unavailable for map table id %s AND omics db id %s. Omics db has matching coordinates with map table (%s and %s). Map table id %s added to omics db id %s as alternative id\n' % (newrs,currs,','.join(br_pos),','.join(om_pos)))
+                    self.add_alt(alt=newrs,main=currs,ds=self.tabname)
+                continue
             if not newrsb38 or not currsb38: #can't get dbsnp for one
                 br_pos = self.checkbr_pos(newrs)[1]
                 om_pos = self.checkom_pos(currs)[1]
@@ -81,9 +84,17 @@ class Types:
                         self.add_alt(alt=newrs,main=currs,ds=self.tabname)
                 else: # not currsb38 but yes newrsb38
                     bad_br_pos = [bp for bp in br_pos if bp != newrsb38]
+                    chosen = 0
                     for bp in bad_br_pos:
-                        print('unchecked ncbyn: map table position for %s is wrong against dbsnp. dbsnp = %s. map table = %s. map table coord to be changed/added\n' % (newrs,newrsb38,bp))
+                        chosen = -1
+                        report.write('map table position for %s is wrong against dbsnp. dbsnp = %s. map table = %s. map table coord to be changed/added\n' % (newrs,newrsb38,bp))
                         self.mtab_change_pos(anid=newrs,oldpos=bp,newpos=newrsb38)
+                    if newrsb38 in om_pos:
+                        print('unchecked ncbyninio: position for omics db id %s is not found in dbsnp. Corresponding map table rs id %s, has its position available in dbsnp which matches an omics version (%s and %s). Adding map table id %s as an alternative id to omics db id %s\n' % (currs,newrs,newrsb38,','.join(om_pos),newrs,currs))
+                        self.add_alt(alt=newrs,main=currs,ds=self.tabname)
+                    else:
+                        report.write('position for omics db id %s is not found in dbsnp. Corresponding map table rs id %s, has its position available in dbsnp. dbsnp position of map table id %s (%s) does not match any positions of %s in omics db (%s). map table id %s will be added to extra_map instead\n' % (currs,newrs,newrs,newrsb38,currs,','.join(om_pos),newrs))
+                    self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=','.join(br_pos))
                 continue
             if newrsb38 != currsb38:
                 ch_count = 0
