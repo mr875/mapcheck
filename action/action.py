@@ -15,7 +15,7 @@ class ProcFile(Types):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=54
+        brk=0
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
@@ -38,6 +38,13 @@ class ProcFile(Types):
         if self.omics.fetchone()[0] == 0:
             maketable = 'CREATE TABLE IF NOT EXISTS extra_map (newid char(20) NOT NULL,linkid char(38) NOT NULL,chr char(4) DEFAULT NULL,GRCh38_pos int unsigned DEFAULT NULL,flank_seq varchar(1040) DEFAULT NULL,datasource varchar(40) NOT NULL,ds_chrpos varchar(20) DEFAULT NULL,chosen TINYINT DEFAULT 0,PRIMARY KEY (newid,linkid,datasource))'
             self.omics.execute(maketable)
+
+    def stillmain(self,mid):
+        q = 'SELECT EXISTS (SELECT 1 FROM consensus WHERE id = %s)'
+        val = (mid,)
+        self.omics.execute(q,val)
+        exists = self.omics.fetchone()[0]
+        return exists
 
     def grabrsinp(self,col):
         rs = re.search("(?:\()(rs[0-9]+)(?:\))", col)

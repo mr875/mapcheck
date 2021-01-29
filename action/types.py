@@ -27,6 +27,9 @@ class Types:
             currs = self.grabrsinp(new_current[1])
             newmchk = self.mergecheck(new_current[0])
             curmchk = self.mergecheck(new_current[1])
+            if not self.stillmain(mid=currs):
+                report.write('omics id %s is not a main id anymore. Skipping\n' % (currs))
+                continue
             if newmchk['withdrawn']:
                 if not curmchk['withdrawn']:
                     report.write('map table %s is withdrawn from dbsnp, use omics db %s instead\n' % (newrs,currs))
