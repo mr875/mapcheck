@@ -90,11 +90,14 @@ class Types:
                         report.write('map table position for %s is wrong against dbsnp. dbsnp = %s. map table = %s. map table coord to be changed/added\n' % (newrs,newrsb38,bp))
                         self.mtab_change_pos(anid=newrs,oldpos=bp,newpos=newrsb38)
                     if newrsb38 in om_pos:
-                        print('unchecked ncbyninio: position for omics db id %s is not found in dbsnp. Corresponding map table rs id %s, has its position available in dbsnp which matches an omics version (%s and %s). Adding map table id %s as an alternative id to omics db id %s\n' % (currs,newrs,newrsb38,','.join(om_pos),newrs,currs))
+                        report.write('position for omics db id %s is not found in dbsnp. Corresponding map table rs id %s, has its position available in dbsnp which matches an omics version (%s and %s). Adding map table id %s as an alternative id to omics db id %s\n' % (currs,newrs,newrsb38,','.join(om_pos),newrs,currs))
                         self.add_alt(alt=newrs,main=currs,ds=self.tabname)
-                    else:
+                    else: # newrsb38 not in om_pos
                         report.write('position for omics db id %s is not found in dbsnp. Corresponding map table rs id %s, has its position available in dbsnp. dbsnp position of map table id %s (%s) does not match any positions of %s in omics db (%s). map table id %s will be added to extra_map instead\n' % (currs,newrs,newrs,newrsb38,currs,','.join(om_pos),newrs))
-                    self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=','.join(br_pos))
+                        ds_chrpos = ','.join(br_pos)
+                        if chosen > -1:
+                            ds_chrpos = None
+                        self.extra_map(newid=newrs,linkid=currs,chrpos=newrsb38,datasource=self.tabname,chosen=chosen,ds_chrpos=ds_chrpos)
                 continue
             if newrsb38 != currsb38:
                 ch_count = 0
