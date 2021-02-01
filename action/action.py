@@ -1,11 +1,12 @@
-from .types import Types
+from .newaltrs_05 import NewAltRs_05
+from .newposmism_06 import NewPosMisM_06
 from datetime import datetime
 import sys
 import os
 import re
 from utils.queryfile import QueryFile, NormFile
 
-class ProcFile(Types):
+class ProcFile(NewAltRs_05,NewPosMisM_06):
 
     def __init__(self,fname,tabname,omics,br,reportmode=True):
         self.inp = NormFile(fname)
@@ -15,7 +16,7 @@ class ProcFile(Types):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=0
+        brk=5
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
@@ -26,6 +27,11 @@ class ProcFile(Types):
                 self.newaltrs(brk=brk)
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_alt_rs.sh',self.inp.bfile,'out_map_new_alt_rs.txt'))
+        if 'new_pos_mismatch_rs' in self.inp.bfile:
+            if 'out' in os.path.basename(self.inp.bfile):
+                self.newposmims(brk=brk)
+            else:
+                sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_pos_mismatch.txt',self.inp.bfile,'out_new_pos_mismatch_rs.txt'))
         self.dbact_om.close()
         self.dbact_br.close()
 
@@ -189,6 +195,8 @@ class ProcFile(Types):
             q = 'UPDATE probes SET id = %s WHERE id = %s'
             self.omics.execute(q,vals)
             q = 'UPDATE snp_present SET id = %s WHERE id = %s'
+            self.omics.execute(q,vals)
+            q = 'UPDATE extra_map SET linkid = %s WHERE linkid = %s'
             self.omics.execute(q,vals)
             vals = (swin,swout,swout_ds)
             q = 'INSERT INTO alt_ids (id,alt_id,datasource) VALUES (%s,%s,%s)'

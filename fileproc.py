@@ -2,11 +2,6 @@ import sys
 import configparser
 from utils.connect import DBConnect
 from action.action import ProcFile
-# recommended dir: parsed_map_new_alt_rs
-# py fileproc.py out_files_corexome/out_sh/out_map_new_alt_rs.txt coreexome_map
-# py fileproc.py out_files_humanexome/out_sh/out_map_new_alt_rs.txt humanexome_map
-# py fileproc.py out_files_infimun/out_sh/out_map_new_alt_rs.txt infiniumimmunoarray_map
-# py fileproc.py out_files_msex/out_sh/out_map_new_alt_rs.txt msexome_map
 
 def loadConf():
     config = configparser.ConfigParser()
