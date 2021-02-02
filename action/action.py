@@ -243,7 +243,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         except:
             e = sys.exc_info()
             self.dbact_om.write( "-- Error trying to add position %s to %s (ds %s): %s\n" % (chrpos,mid,ds,e))
-    
+
     def checkbr_pos(self,mid,chrpos=None):
         where,val,rscol,res = self.mtab_get_where_string(mid)
 #        q = 'SELECT chr FROM ' + self.tabname + where
