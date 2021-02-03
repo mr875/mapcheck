@@ -1,3 +1,4 @@
+import timeit
 import re
 
 # recommended dir: parsed_map_new_alt_rs
@@ -8,6 +9,8 @@ import re
 
 class NewAltRs_05:
 
+    grandstart = timeit.default_timer()
+
     def percent_comp(self,current,perc,total=0):
         if not total:
             total = self.inp.row_count
@@ -15,7 +18,8 @@ class NewAltRs_05:
         #print('%s & %s' % (current,steps))
         try:
             if current % steps == 0:
-                print('%s of %s (%s percent) done' % (current,total,int((current/total)*100)))
+                thetime = timeit.default_timer()
+                print('%s of %s (%s percent) done. %s seconds.' % (current,total,int((current/total)*100),int(thetime - self.grandstart)))
         except ZeroDivisionError:
             pass
 

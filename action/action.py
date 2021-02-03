@@ -80,7 +80,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         after_match = False
         for ind,rs in enumerate(evenarr):
             ind += 1
-            if (ind % 2) != 0:
+            if (ind % 2) != 0: # before
                 if rs == bfor:
                     correct = True
                     nxt.append(evenarr[ind])
@@ -89,11 +89,19 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
                 after_match = True
         return {'correct':correct,'after_match':after_match,'alt_after':nxt}
 
+    def mergedinto(self,evenarr,potbef):
+        becomes = []
+        for ind,rs in enumerate(evenarr):
+            if (ind % 2) == 0: # before
+                if potbef == rs:
+                    becomes.append(evenarr[ind+1])
+        return becomes
+
     def getb38(self,container):
         rslt = re.search('(?:b38=)(\S+)',container)
-        if not rslt:
+        if not rslt: # will need handling: AttributeError: 'NoneType' object has no attribute 'group'
             return None
-        return rslt.group(1) # will need handling: AttributeError: 'NoneType' object has no attribute 'group'
+        return rslt.group(1) 
 
     def add_alt(self,alt,main,ds):
         if self.reportmode:
@@ -138,20 +146,24 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
             rscol = 'chipid'
         else:
             rscol = 'dbsnpid'
-        colwithid = 'snp'
-        where = ' WHERE ' + colwithid + ' = %s'
-        q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
-        val = (anid,)
-        self.br.execute(q,val)
-        res = self.br.fetchall()
-        if self.br.rowcount == 0 and 'rs' in anid: # or len(res)
+        colwithid = ''
+        where = ''
+        res = None
+        if 'rs' in anid: # or len(res)
             colwithid = rscol
             where = ' WHERE ' + rscol + ' REGEXP %s'
             q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
             val = (anid+'[[:>:]]',)
             self.br.execute(q,val)
             res = self.br.fetchall()
-        if self.br.rowcount > 0:
+        if not res:
+            colwithid = 'snp'
+            where = ' WHERE ' + colwithid + ' = %s'
+            q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
+            val = (anid,)
+            self.br.execute(q,val)
+            res = self.br.fetchall()
+        if res:
             return where,val,colwithid,res
 
     def mtab_change_pos(self,anid,oldpos,newpos):
