@@ -258,10 +258,6 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
 
     def checkbr_pos(self,mid,chrpos=None):
         where,val,rscol,res = self.mtab_get_where_string(mid)
-#        q = 'SELECT chr FROM ' + self.tabname + where
-#        self.br.execute(q,val)
-#        res = self.br.fetchall() # or use initial res which has cols: snp,dbsnpid,chr
-#        res = [s[0] for s in res] 
         res = [s[2] for s in res] 
         res = list(dict.fromkeys(res))
         if not chrpos:

@@ -7,11 +7,12 @@ myname=${myname/map_/}
 outfile="out_${myname%.*}_rs.txt"
 while IFS=$'\t' read -r nothing id tabloc dblocs
 do
+    ori=${id#*orig }
+    ori=${ori%)}
     id=${id%% *}
-#    dbloc=${dblocs%/*}
     if [[ $id =~ ^rs[0-9] ]]; then
         idlookup=$($crawl $id)
-        echo -e "$id\ttab=$tabloc\tdb=$dblocs\tlookup=$idlookup" | tee -a $outfile
+        echo -e "$id\ttab=$tabloc\tdb=$dblocs\tbrorig=$ori\tlookup=$idlookup" | tee -a $outfile
     else
         echo -e "$id\ttab=$tabloc\tdb=$dblocs" | tee -a $outfile
     fi

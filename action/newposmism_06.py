@@ -22,13 +22,18 @@ class NewPosMisM_06:
             brpos = self.checkbr_pos(mid)[1] #brtab_hard has single unmatching coord but some ids have multiple coords
             ompos = self.checkom_pos(mid)[1] #omtab_hard is unreliable, found to contain b37
             if len(new_current) == 1: # no look up available and probably not rsid
+                nolkup = 0
                 newtobr = [pos for pos in ompos if pos not in brpos and pos != '0:0']
                 newtoom = [pos for pos in brpos if pos not in ompos and pos != '0:0']
                 if newtoom:
                     report.write('No lookup available (re.split failed) for id %s. found position(s) new to omics: %s. Currently in omics: %s. Adding to omics positions table.\n' % (mid,','.join(newtoom),','.join(ompos)))
                     [self.addpos(mid,chrpos=cp,ds=self.tabname,build='38') for cp in newtoom]
+                    nolkup += 1
                 if newtobr:
                     print('No lookup available (re.split failed) for id %s. found position(s) new to br map table: %s. Currently in br map table: %s' % (mid,','.join(newtobr),','.join(brpos)))
+                    nolkup += 1
+                if not nolkup:
+                    print('can remove this message after test stage: No lookup available for id %s. No novel coord found for either br table (%s) or omics db (%s).' % (mid,','.join(brpos),','.join(ompos)))
                 continue
             b38 = self.getb38(new_current[1])
             if not b38:
