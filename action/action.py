@@ -16,7 +16,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=5
+        brk=2 #brk=400
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
@@ -165,6 +165,8 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
             res = self.br.fetchall()
         if res:
             return where,val,colwithid,res
+        else:
+            return None
 
     def mtab_change_pos(self,anid,oldpos,newpos):
         if anid in self.actbr_poschng:
@@ -257,7 +259,10 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
             self.dbact_om.write( "-- Error trying to add position %s to %s (ds %s): %s\n" % (chrpos,mid,ds,e))
 
     def checkbr_pos(self,mid,chrpos=None):
-        where,val,rscol,res = self.mtab_get_where_string(mid)
+        allout = self.mtab_get_where_string(mid)
+        if not allout:
+            return None
+        where,val,rscol,res = allout
         res = [s[2] for s in res] 
         res = list(dict.fromkeys(res))
         if not chrpos:
@@ -278,6 +283,14 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         if chrpos in res:
             return [True,res]
         return [False,res]
+
+    def checkomics_pos(self,mid):
+        q = 'SELECT chr,pos,build FROM positions WHERE build = %s AND id = %s'
+        val = ('38',mid)
+        self.omics.execute(q,val)
+        res = self.omics.fetchall()
+        res = [s[0] + ':'+ str(s[1]) for s in res]
+        return [res]
 
     def extra_map(self,newid,linkid,chrpos,datasource,chosen,ds_chrpos=None):
         if self.reportmode:

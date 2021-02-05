@@ -17,5 +17,9 @@ mismatch against all b38 db entries     rs11538868 (orig rs11538868)    17:47827
 | exm1332668 | rs11538868 | 17:47827054 |
 | exm1332668 | rs11538868 | 17:47827054 |
 +------------+------------+-------------+
+B.. same: 
+mismatch against all b38 db entries     rs147144682 (orig rs147144682)  19:43184920     0:0/0:0/19:43184920/19:43689072
+
 2.
 should not print b37 coords <prefix>_map_new_pos_mismatch.txt. does it for every line, see above (1.A) for example.
+

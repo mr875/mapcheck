@@ -15,12 +15,19 @@ class NewPosMisM_06:
                 break
             self.percent_comp(current=count,perc=10,total=brk)
             new_current = re.split('\tlookup=',line.rstrip())
-            mid,brtab_hard,omtab_hard = re.split('\t',new_current[0])
+            mid,brtab_hard,omtab_hard,brorig = re.split('\t',new_current[0])
+            brorig = brorig.split('=')[1]
             if not self.stillmain:
                 print('omics db id %s not present (in consensus table) any longer' % (mid))
                 continue
-            brpos = self.checkbr_pos(mid)[1] #brtab_hard has single unmatching coord but some ids have multiple coords
-            ompos = self.checkom_pos(mid)[1] #omtab_hard is unreliable, found to contain b37
+            getbrpos = self.checkbr_pos(mid)
+            if not getbrpos and brorig != mid:
+                getbrpos =self.checkbr_pos(brorig)
+            else:
+                brorig = None
+            brpos = getbrpos[1] #brtab_hard has single unmatching coord but some ids have multiple coords
+            ompos = self.checkomics_pos(mid)[0] #omtab_hard is unreliable, found to contain b37
+            ompos = list(dict.fromkeys(ompos))
             if len(new_current) == 1: # no look up available and probably not rsid
                 nolkup = 0
                 newtobr = [pos for pos in ompos if pos not in brpos and pos != '0:0']
@@ -50,8 +57,12 @@ class NewPosMisM_06:
                 if brpos_hit:
                     report.write('br map table has coords for %s that do not match with dbsnp %s (%s), but also coords that do (%s). No action coded yet\n' % (mid,b38,','.join(brpos_mis),','.join(brpos_hit)))
                 else:
-                    report.write('br map table coords for %s (%s) do not match dbsnp coord (%s). Correcting the coordinates in map table\n' % (mid,','.join(brpos_mis),b38))
-                    [self.mtab_change_pos(mid,oldpos=mis,newpos=b38) for mis in brpos_mis]
+                    if brorig:
+                        report.write('br map table coords for %s (%s), which is a linked alternative to omics main id %s do not match dbsnp coord (%s). Correcting the coordinates in map table\n' % (brorig,','.join(brpos_mis),mid,b38))
+                        [self.mtab_change_pos(brorig,oldpos=mis,newpos=b38) for mis in brpos_mis]
+                    else:
+                        report.write('br map table coords for %s (%s) do not match dbsnp coord (%s). Correcting the coordinates in map table\n' % (mid,','.join(brpos_mis),b38))
+                        [self.mtab_change_pos(mid,oldpos=mis,newpos=b38) for mis in brpos_mis]
                 actions += 1
             if ompos_mis:
                 report.write('unchecked: omics b38 coord(s) for id %s (%s) do not match with the dbsnp coord (%s). Flagging entry in db\n' % (mid,','.join(ompos_mis),b38))

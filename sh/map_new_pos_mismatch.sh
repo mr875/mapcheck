@@ -14,6 +14,6 @@ do
         idlookup=$($crawl $id)
         echo -e "$id\ttab=$tabloc\tdb=$dblocs\tbrorig=$ori\tlookup=$idlookup" | tee -a $outfile
     else
-        echo -e "$id\ttab=$tabloc\tdb=$dblocs" | tee -a $outfile
+        echo -e "$id\ttab=$tabloc\tdb=$dblocs\tbrorig=$ori" | tee -a $outfile
     fi
 done < $new_pos_mismatch
