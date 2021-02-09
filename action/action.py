@@ -16,7 +16,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=2 #brk=400
+        brk=3 #brk=400
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
@@ -271,9 +271,9 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
             return [True,res]
         return [False,res]
 
-    def checkom_pos(self,mid,chrpos=None):
+    def checkom_pos(self,mid,chrpos=None,build='38'):
         q = 'SELECT chr,pos FROM positions WHERE build = %s AND id = %s'
-        val = ('38',mid)
+        val = (build,mid)
         self.omics.execute(q,val)
         res = self.omics.fetchall()
         res = [s[0] + ':'+ str(s[1]) for s in res]
@@ -285,12 +285,26 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         return [False,res]
 
     def checkomics_pos(self,mid):
-        q = 'SELECT chr,pos,build FROM positions WHERE build = %s AND id = %s'
+        q = 'SELECT chr,pos FROM positions WHERE build = %s AND id = %s'
         val = ('38',mid)
         self.omics.execute(q,val)
         res = self.omics.fetchall()
         res = [s[0] + ':'+ str(s[1]) for s in res]
         return [res]
+
+    def checkom_flag(self,mid,chrpos,build='38'):
+        chrm,pos = chrpos.split(':')
+        q = 'SELECT chosen FROM positions WHERE id = %s AND build = %s AND chr = %s AND pos = %s'
+        vals = (mid,build,chrm,pos)
+        self.omics.execute(q,vals)
+        res = self.omics.fetchall()
+        res = [ch[0] for ch in res]
+        #res = [-1 for ch in res]
+        badflag = False
+        for chs in res:
+            if chs < 0:
+                badflag = True
+        return [badflag,res]
 
     def extra_map(self,newid,linkid,chrpos,datasource,chosen,ds_chrpos=None):
         if self.reportmode:

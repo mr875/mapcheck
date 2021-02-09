@@ -21,30 +21,48 @@ class NewPosMisM_06:
                 print('omics db id %s not present (in consensus table) any longer' % (mid))
                 continue
             getbrpos = self.checkbr_pos(mid)
+            brid = mid
             if not getbrpos and brorig != mid:
                 getbrpos =self.checkbr_pos(brorig)
+                brid = brorig
+                print('mid %s maps to br map table id %s\n' % (mid,brid))
             else:
                 brorig = None
             brpos = getbrpos[1] #brtab_hard has single unmatching coord but some ids have multiple coords
             ompos = self.checkomics_pos(mid)[0] #omtab_hard is unreliable, found to contain b37
             ompos = list(dict.fromkeys(ompos))
-            if len(new_current) == 1: # no look up available and probably not rsid
+            b38 = None
+            explained = 'No lookup available (re.split failed) '
+            if len(new_current) > 1: # look up available 
+                b38 = self.getb38(new_current[1])
+                if not b38:
+                    print('NO b38 FROM dbsnp AVAILABLE. %s. no action yet' % (mid))
+                    explained = 'No b38 from dbsnp (possibly withdrawn) '
+            if not b38: # look up not available (and probably no rs id) OR b38 not available
                 nolkup = 0
                 newtobr = [pos for pos in ompos if pos not in brpos and pos != '0:0']
                 newtoom = [pos for pos in brpos if pos not in ompos and pos != '0:0']
                 if newtoom:
-                    report.write('No lookup available (re.split failed) for id %s. found position(s) new to omics: %s. Currently in omics: %s. Adding to omics positions table.\n' % (mid,','.join(newtoom),','.join(ompos)))
-                    [self.addpos(mid,chrpos=cp,ds=self.tabname,build='38') for cp in newtoom]
+                    for cp in newtoom:
+                        if self.checkom_pos(mid,chrpos=cp,build='37')[0]:
+                            report.write(explained + 'for id %s. found position(s) new to omics: %s. Currently in omics (b38): %s. BUT position %s is in omics under b37. the position will not be added to omics again because it can not be validated by dbsnp look up.\n' % (mid,cp,','.join(ompos),cp))
+                        else:
+                            print(explained + 'for id %s. found position(s) new to omics: %s. Currently in omics: %s. Adding to omics positions table.\n' % (mid,cp,','.join(ompos)))
+                            self.addpos(mid,chrpos=cp,ds=self.tabname,build='38')
                     nolkup += 1
                 if newtobr:
-                    print('No lookup available (re.split failed) for id %s. found position(s) new to br map table: %s. Currently in br map table: %s' % (mid,','.join(newtobr),','.join(brpos)))
+                    newtobr_unflagged = [ntbr for ntbr in newtobr if not self.checkom_flag(mid,chrpos=ntbr)[0]]
+                    oldbrpos = [obrp for obrp in brpos if obrp != '0:0']
+                    if len(newtobr_unflagged) == 1:
+                        ntbr = newtobr_unflagged[0]
+                        report.write(explained + 'for id %s. found position new to br map table: %s. Currently in br map table: %s. No flag in omics so switching the position into br\n' % (mid,ntbr,','.join(brpos)))
+                        for oldp in oldbrpos:
+                            self.mtab_change_pos(brid,oldpos=oldp,newpos=ntbr)
+                    else:
+                        print(explained + 'for id %s. found position new to br map table: %s. Currently in br map table: %s. No change made in br map table due to omics entry being flagged or ambiguous (more than 1) new positions\n' % (mid,','.join(newtobr),','.join(brpos)))
                     nolkup += 1
                 if not nolkup:
                     print('can remove this message after test stage: No lookup available for id %s. No novel coord found for either br table (%s) or omics db (%s).' % (mid,','.join(brpos),','.join(ompos)))
-                continue
-            b38 = self.getb38(new_current[1])
-            if not b38:
-                print('NO b38 FROM dbsnp AVAILABLE. %s. no action yet' % (mid))
                 continue
             mgchk = self.mergecheck(new_current[1])
             merges = mgchk['merges']
