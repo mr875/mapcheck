@@ -16,7 +16,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=3 #brk=400
+        brk=4 #brk=400
         print("line count",self.inp.row_count)
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")

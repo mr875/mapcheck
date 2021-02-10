@@ -25,7 +25,7 @@ class NewPosMisM_06:
             if not getbrpos and brorig != mid:
                 getbrpos =self.checkbr_pos(brorig)
                 brid = brorig
-                print('mid %s maps to br map table id %s\n' % (mid,brid))
+                report.write('mid %s maps to br map table id %s\n' % (mid,brid))
             else:
                 brorig = None
             brpos = getbrpos[1] #brtab_hard has single unmatching coord but some ids have multiple coords
@@ -36,7 +36,6 @@ class NewPosMisM_06:
             if len(new_current) > 1: # look up available 
                 b38 = self.getb38(new_current[1])
                 if not b38:
-                    print('NO b38 FROM dbsnp AVAILABLE. %s. no action yet' % (mid))
                     explained = 'No b38 from dbsnp (possibly withdrawn) '
             if not b38: # look up not available (and probably no rs id) OR b38 not available
                 nolkup = 0
@@ -47,7 +46,7 @@ class NewPosMisM_06:
                         if self.checkom_pos(mid,chrpos=cp,build='37')[0]:
                             report.write(explained + 'for id %s. found position(s) new to omics: %s. Currently in omics (b38): %s. BUT position %s is in omics under b37. the position will not be added to omics again because it can not be validated by dbsnp look up.\n' % (mid,cp,','.join(ompos),cp))
                         else:
-                            print(explained + 'for id %s. found position(s) new to omics: %s. Currently in omics: %s. Adding to omics positions table.\n' % (mid,cp,','.join(ompos)))
+                            report.write(explained + 'for id %s. found position(s) new to omics: %s. Currently in omics: %s. Adding to omics positions table.\n' % (mid,cp,','.join(ompos)))
                             self.addpos(mid,chrpos=cp,ds=self.tabname,build='38')
                     nolkup += 1
                 if newtobr:
@@ -55,7 +54,7 @@ class NewPosMisM_06:
                     oldbrpos = [obrp for obrp in brpos if obrp != '0:0']
                     if len(newtobr_unflagged) == 1:
                         ntbr = newtobr_unflagged[0]
-                        report.write(explained + 'for id %s. found position new to br map table: %s. Currently in br map table: %s. No flag in omics so switching the position into br\n' % (mid,ntbr,','.join(brpos)))
+                        report.write(explained + 'for id %s. found position new to br map table: %s. Currently in br map table: %s. No flag in omics so switching the position into br map table\n' % (mid,ntbr,','.join(brpos)))
                         for oldp in oldbrpos:
                             self.mtab_change_pos(brid,oldpos=oldp,newpos=ntbr)
                     else:
@@ -73,14 +72,11 @@ class NewPosMisM_06:
             actions = 0
             if brpos_mis:
                 if brpos_hit:
-                    report.write('br map table has coords for %s that do not match with dbsnp %s (%s), but also coords that do (%s). No action coded yet\n' % (mid,b38,','.join(brpos_mis),','.join(brpos_hit)))
+                    report.write('br map table has coords for %s that do not match with dbsnp %s (%s), but also coords that do (%s). Correcting the non matching coordinates in map table\n' % (brid,b38,','.join(brpos_mis),','.join(brpos_hit)))
                 else:
-                    if brorig:
-                        report.write('br map table coords for %s (%s), which is a linked alternative to omics main id %s do not match dbsnp coord (%s). Correcting the coordinates in map table\n' % (brorig,','.join(brpos_mis),mid,b38))
-                        [self.mtab_change_pos(brorig,oldpos=mis,newpos=b38) for mis in brpos_mis]
-                    else:
-                        report.write('br map table coords for %s (%s) do not match dbsnp coord (%s). Correcting the coordinates in map table\n' % (mid,','.join(brpos_mis),b38))
-                        [self.mtab_change_pos(mid,oldpos=mis,newpos=b38) for mis in brpos_mis]
+                    report.write('br map table coords for %s (%s) do not match dbsnp coord (%s). Correcting the coordinates in map table\n' % (brid,','.join(brpos_mis),b38))
+                for mis in brpos_mis:
+                    self.mtab_change_pos(brid,oldpos=mis,newpos=b38)
                 actions += 1
             if ompos_mis:
                 report.write('unchecked: omics b38 coord(s) for id %s (%s) do not match with the dbsnp coord (%s). Flagging entry in db\n' % (mid,','.join(ompos_mis),b38))
