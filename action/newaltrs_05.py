@@ -11,9 +11,11 @@ class NewAltRs_05:
 
     grandstart = timeit.default_timer()
 
-    def percent_comp(self,current,perc,total=0):
+    def percent_comp(self,current,perc,total=0,start=0):
         if not total:
             total = self.inp.row_count
+        total = total - start
+        current = current - start
         steps = int((perc/100.0)*total)
         #print('%s & %s' % (current,steps))
         try:
@@ -23,7 +25,7 @@ class NewAltRs_05:
         except ZeroDivisionError:
             pass
 
-    def newaltrs(self,brk=0):
+    def newaltrs(self,brk=0,start=0):
         #rs id not found in db but db already has another rs id for that variant
         report = open('report_newaltr_' + self.ts + '.txt',"w")
         count = 0

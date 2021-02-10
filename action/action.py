@@ -16,20 +16,20 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=4 #brk=400
-        print("line count",self.inp.row_count)
+        brk=12 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
+        start=0 # set to 0 for no action. if 10 then line number 10 gets done
         self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
         self.actbr_poschng = set()
         self.actbr_idchng = set()
         if 'map_new_alt_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
-                self.newaltrs(brk=brk)
+                self.newaltrs(brk=brk,start=start)
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_alt_rs.sh',self.inp.bfile,'out_map_new_alt_rs.txt'))
         if 'new_pos_mismatch_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
-                self.newposmims(brk=brk)
+                self.newposmims(brk=brk,start=start)
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_pos_mismatch.txt',self.inp.bfile,'out_new_pos_mismatch_rs.txt'))
         self.dbact_om.close()

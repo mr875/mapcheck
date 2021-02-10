@@ -5,7 +5,7 @@ import re
 # py fileproc.py out_files_corexome/out_sh/out_new_pos_mismatch_rs.txt coreexome_map
 class NewPosMisM_06:
 
-    def newposmims(self,brk=0):
+    def newposmims(self,brk=0,start=0):
         # variant position does not match db (b38) position(s)
         report = open('report_newposmims_' + self.ts + '.txt',"w")
         count = 0
@@ -13,7 +13,9 @@ class NewPosMisM_06:
             count+=1
             if brk and count == brk:
                 break
-            self.percent_comp(current=count,perc=10,total=brk)
+            if start and count < start:
+                continue
+            self.percent_comp(current=count,perc=10,total=brk,start=start)
             new_current = re.split('\tlookup=',line.rstrip())
             mid,brtab_hard,omtab_hard,brorig = re.split('\t',new_current[0])
             brorig = brorig.split('=')[1]
