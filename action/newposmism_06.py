@@ -3,6 +3,7 @@ import re
 
 
 # py fileproc.py out_files_corexome/out_sh/out_new_pos_mismatch_rs.txt coreexome_map
+# py fileproc.py out_files_humanexome/out_sh/out_new_pos_mismatch_rs.txt humanexome_map
 class NewPosMisM_06:
 
     def newposmims(self,brk=0,start=0):
@@ -81,7 +82,7 @@ class NewPosMisM_06:
                     self.mtab_change_pos(brid,oldpos=mis,newpos=b38)
                 actions += 1
             if ompos_mis:
-                report.write('unchecked: omics b38 coord(s) for id %s (%s) do not match with the dbsnp coord (%s). Flagging entry in db\n' % (mid,','.join(ompos_mis),b38))
+                report.write('omics b38 coord(s) for id %s (%s) do not match with the dbsnp coord (%s). Flagging entry in db\n' % (mid,','.join(ompos_mis),b38))
                 [self.pos_flag(mid,chrpos,fl=-5) for chrpos in ompos_mis]
                 actions += 1
             if not ompos_hit:
