@@ -4,11 +4,15 @@ import re
 
 # py fileproc.py out_files_corexome/out_sh/out_new_pos_mismatch_rs.txt coreexome_map
 # py fileproc.py out_files_humanexome/out_sh/out_new_pos_mismatch_rs.txt humanexome_map
+# py fileproc.py out_files_msex/out_sh/out_new_pos_mismatch_rs.txt msexome_map
+# py fileproc.py out_files_omni/out_sh/out_new_pos_mismatch_rs.txt omniexpress_map
+# py fileproc.py out_files_omni21/out_sh/out_new_pos_mismatch_rs.txt omniexpress_v2_1_map
+# py fileproc.py out_files_ukbb2_1/out_sh/out_new_pos_mismatch_rs.txt ukbbaffy_v2_1_map 
 class NewPosMisM_06:
 
     def newposmims(self,brk=0,start=0):
         # variant position does not match db (b38) position(s)
-        report = open('report_newposmims_' + self.ts + '.txt',"w")
+        report = open('report_newposmims_' + self.ts + '_' + self.tabname + '.txt',"w")
         count = 0
         for line in self.inp.read():
             count+=1

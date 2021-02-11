@@ -16,10 +16,10 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=0 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
+        brk=5 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
         start=0 # set to 0 for no action. if 10 then line number 10 gets done
-        self.dbact_om = open('dbact_om_' + self.ts + '.sql',"w")
-        self.dbact_br = open('dbact_br_' + self.ts + '.sql',"w")
+        self.dbact_om = open('dbact_om_' + self.ts + '_' + tabname + '.sql',"w")
+        self.dbact_br = open('dbact_br_' + self.ts + '_' + tabname + '.sql',"w")
         self.actbr_poschng = set()
         self.actbr_idchng = set()
         if 'map_new_alt_rs' in self.inp.bfile:
@@ -126,9 +126,13 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         if xsting in self.actbr_idchng:
             print('entered mtab_change_id to change %s to %s but id %s has been edited already in this session' % (xsting,chngto,xsting))
             return
+        if 'ukbbaffy_v2_1_map' in self.tabname:
+            mid_col = 'chipid'
+        else:
+            mid_col = 'snp'
         where,val,colwithid,res = self.mtab_get_where_string(xsting)
         where = where.replace('%s','\'%s\'') + ';\n'
-        if colwithid != 'snp':
+        if colwithid != mid_col:
             res = [rs[1] for rs in res]
             rs_ls = []
             for rs in res:
@@ -143,23 +147,24 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
 
     def mtab_get_where_string(self,anid):
         if 'ukbbaffy_v2_1_map' in self.tabname:
-            rscol = 'chipid'
+            mid_col = 'chipid'
         else:
-            rscol = 'dbsnpid'
+            mid_col = 'snp'
+        rscol = 'dbsnpid'
         colwithid = ''
         where = ''
         res = None
         if 'rs' in anid: # or len(res)
             colwithid = rscol
             where = ' WHERE ' + rscol + ' REGEXP %s'
-            q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
+            q = 'SELECT ' + mid_col + ',dbsnpid,chr FROM ' + self.tabname + where
             val = (anid+'[[:>:]]',)
             self.br.execute(q,val)
             res = self.br.fetchall()
         if not res:
-            colwithid = 'snp'
+            colwithid = mid_col
             where = ' WHERE ' + colwithid + ' = %s'
-            q = 'SELECT snp,dbsnpid,chr FROM ' + self.tabname + where
+            q = 'SELECT ' + mid_col + ',dbsnpid,chr FROM ' + self.tabname + where
             val = (anid,)
             self.br.execute(q,val)
             res = self.br.fetchall()
