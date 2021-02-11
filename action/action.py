@@ -1,3 +1,4 @@
+from .newrs_07 import NewRs_07
 from .newaltrs_05 import NewAltRs_05
 from .newposmism_06 import NewPosMisM_06
 from datetime import datetime
@@ -6,7 +7,7 @@ import os
 import re
 from utils.queryfile import QueryFile, NormFile
 
-class ProcFile(NewAltRs_05,NewPosMisM_06):
+class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07):
 
     def __init__(self,fname,tabname,omics,br,reportmode=True):
         self.inp = NormFile(fname)
@@ -16,7 +17,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=5 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
+        brk=0 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
         start=0 # set to 0 for no action. if 10 then line number 10 gets done
         self.dbact_om = open('dbact_om_' + self.ts + '_' + tabname + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '_' + tabname + '.sql',"w")
@@ -32,6 +33,12 @@ class ProcFile(NewAltRs_05,NewPosMisM_06):
                 self.newposmims(brk=brk,start=start)
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_pos_mismatch.txt',self.inp.bfile,'out_new_pos_mismatch_rs.txt'))
+        if '_new_rs' in self.inp.bfile:
+            if 'out' in os.path.basename(self.inp.bfile):
+                pass
+                self.newrs(brk=brk,start=start)
+            else:
+                sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_rs.sh',self.inp.bfile,'out_new_rs_rs.txt'))
         self.dbact_om.close()
         self.dbact_br.close()
 
