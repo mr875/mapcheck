@@ -17,7 +17,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=0 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
+        brk=5 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
         start=0 # set to 0 for no action. if 10 then line number 10 gets done
         self.dbact_om = open('dbact_om_' + self.ts + '_' + tabname + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '_' + tabname + '.sql',"w")
@@ -35,8 +35,10 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07):
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_pos_mismatch.txt',self.inp.bfile,'out_new_pos_mismatch_rs.txt'))
         if '_new_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
-                pass
-                self.newrs(brk=brk,start=start)
+                if 'byalt' not in os.path.basename(self.inp.bfile):
+                    self.newrs(brk=brk,start=start)
+                else:
+                    pass
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_rs.sh',self.inp.bfile,'out_new_rs_rs.txt'))
         self.dbact_om.close()

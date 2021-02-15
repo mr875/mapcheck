@@ -8,6 +8,7 @@ import re
 # py fileproc.py out_files_omni/out_sh/out_new_pos_mismatch_rs.txt omniexpress_map
 # py fileproc.py out_files_omni21/out_sh/out_new_pos_mismatch_rs.txt omniexpress_v2_1_map
 # py fileproc.py out_files_ukbb2_1/out_sh/out_new_pos_mismatch_rs.txt ukbbaffy_v2_1_map 
+# py fileproc.py out_files_infimun/out_sh/out_new_pos_mismatch_rs.txt infiniumimmunoarray_map 
 class NewPosMisM_06:
 
     def newposmims(self,brk=0,start=0):
