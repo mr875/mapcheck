@@ -2,6 +2,7 @@ import timeit
 import re
 
 # py fileproc.py out_files_corexome/out_sh/out_new_rs_rs.txt coreexome_map
+# py fileproc.py out_files_humanexome/out_sh/out_new_rs_rs.txt humanexome_map
 
 class NewRs_07:
 # map table rsid not known to db, map table non-rsid in db consensus instead
@@ -23,19 +24,35 @@ class NewRs_07:
             mgchk = self.mergecheck(new_current[1])
             merges = mgchk['merges']
             becomes = self.mergedinto(evenarr=merges,potbef=mapid)
+            stillmain = self.stillmain(linkid)
+            mrgid = None
             if becomes:
-                print('map table id %s should be merged into %s. No action yet' % (mapid,'/'.join(becomes)))
-                continue
-            if not self.stillmain(linkid):
+                if len(becomes) > 1: # probably not necessary
+                    print('map table id %s is merged into multiple (%s) according to dbsnp lookup. No action yet' % (mapid,'/'.join(becomes)))
+                    continue
+                mrgid = becomes[0]
+                print('map table id %s merged to %s and linked to omics %s. correcting map table (%s -> %s)\n' % (mapid,mrgid,linkid,mapid,mrgid))
+                self.mtab_change_id(xsting=mapid,chngto=mrgid)
+                mrgid_knwn = self.checkomid(cid=mrgid) # is the mrgid unknown as the mapid was?
+                if not mrgid_knwn[0] and not mrgid_knwn[1]:
+                    print('new id %s is also unknown to omics so adding old map id %s as alternative id to %s and continuing\n' % (mrgid,mapid,linkid))
+                    if stillmain:
+                        self.add_alt(alt=mapid,main=linkid,ds=self.tabname)
+                    continue # for eventual removal
+                else:
+                    print('new merged id %s is already known as consensus id or alternative id or both (%s). No action\n' % (mrgid,'-'.join(mrgid_knwn)))
+                    continue
+            if not stillmain:
                 print('link id %s is not in consensus table. Would have swapped it out with %s from map table' % (linkid,mapid))
                 continue
             b38 = self.getb38(new_current[1])
             if not b38:
-                print('b38 position of map table id %s (omics %s) not available (may be withdrawn)' % (mapid,linkid))
+                report.write('b38 position of map table id %s (omics %s) not available (may be withdrawn). Will add to omics as alternative id instead\n' % (mapid,linkid))
+                self.add_alt(alt=mapid,main=linkid,ds=self.tabname)
                 continue
             contig = False
             if '_' in b38:
-                print('map table id %s (omics %s) dbsnp look up has a contig id instead of regular chromosome identifier: %s. Will swap %s into omics for %s but will not correct/update positions' % (mapid,linkid,b38,mapid,linkid))
+                report.write('map table id %s (omics %s) dbsnp look up has a contig id instead of regular chromosome identifier: %s. Will swap %s into omics for %s but will not correct/update positions\n' % (mapid,linkid,b38,mapid,linkid))
                 contig = True
             getbrpos = self.checkbr_pos(mapid,b38)
             getompos = self.checkom_pos(linkid,chrpos=b38,build='38')
@@ -50,7 +67,7 @@ class NewRs_07:
                     badom = [bp for bp in getompos[1] if bp != '0:0']
                     self.addpos(linkid,chrpos=b38,ds='dbsnp',build='38')
                     for bp in badom:
-                        print('flagging position %s in omics db because we have a dbsnp sourced coordinate %s for this variant (%s/%s)' % (bp,b38,linkid,mapid))
+                        report.write('flagging position %s in omics db because we have a dbsnp sourced coordinate %s for this variant (%s/%s)\n' % (bp,b38,linkid,mapid))
                         self.pos_flag(linkid,chrpos=bp,fl=-5)
             report.write('swapping main id %s out of omics consensus table and new id %s from map table in\n' % (linkid,mapid))
             self.swapout_main(swin=mapid,swout=linkid,ds=self.tabname)               
