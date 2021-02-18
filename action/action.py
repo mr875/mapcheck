@@ -1,13 +1,14 @@
 from .newrs_07 import NewRs_07
 from .newaltrs_05 import NewAltRs_05
 from .newposmism_06 import NewPosMisM_06
+from .newrsbyalt_08 import NewRsbyAlt_08
 from datetime import datetime
 import sys
 import os
 import re
 from utils.queryfile import QueryFile, NormFile
 
-class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07):
+class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08):
 
     def __init__(self,fname,tabname,omics,br,reportmode=True):
         self.inp = NormFile(fname)
@@ -17,7 +18,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=4 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
+        brk=2 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
         start=0 # set to 0 for no action. if 10 then line number 10 gets done
         self.dbact_om = open('dbact_om_' + self.ts + '_' + tabname + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '_' + tabname + '.sql',"w")
@@ -38,7 +39,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07):
                 if 'byalt' not in os.path.basename(self.inp.bfile):
                     self.newrs(brk=brk,start=start)
                 else:
-                    pass
+                    self.newrsbyalt(brk=brk,start=start)
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_new_rs.sh',self.inp.bfile,'out_new_rs_rs.txt'))
         self.dbact_om.close()
