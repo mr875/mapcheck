@@ -74,10 +74,10 @@ class NewRs_07:
                     for bp in badom:
                         report.write('flagging position %s in omics db because we have a dbsnp sourced coordinate %s for this variant (%s/%s)\n' % (bp,b38,linkid,mapid))
                         self.pos_flag(linkid,chrpos=bp,fl=-5)
-                if not mrgid:
-                    report.write('swapping main id %s out of omics consensus table and new id %s from map table in\n' % (linkid,mapid))
-                    self.swapout_main(swin=mapid,swout=linkid,ds=self.tabname)               
-                else:
-                    report.write('swapping main id %s out of omics consensus table and new merged id %s from map table (originally %s) in\n' % (linkid,mrgid,mapid))
-                    self.swapout_main(swin=mrgid,swout=linkid,ds='dbsnp')               
+            if not mrgid:
+                report.write('swapping main id %s out of omics consensus table and new id %s from map table in\n' % (linkid,mapid))
+                self.swapout_main(swin=mapid,swout=linkid,ds=self.tabname)               
+            else:
+                report.write('swapping main id %s out of omics consensus table and new merged id %s from map table (originally %s) in\n' % (linkid,mrgid,mapid))
+                self.swapout_main(swin=mrgid,swout=linkid,ds='dbsnp')               
         print('Done. %s seconds' % (int(timeit.default_timer() - self.grandstart)))
