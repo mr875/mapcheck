@@ -26,7 +26,7 @@ class NewPosMisM_06:
             new_current = re.split('\tlookup=',line.rstrip())
             mid,brtab_hard,omtab_hard,brorig = re.split('\t',new_current[0])
             brorig = brorig.split('=')[1]
-            if not self.stillmain:
+            if not self.stillmain(mid):
                 print('omics db id %s not present (in consensus table) any longer' % (mid))
                 continue
             getbrpos = self.checkbr_pos(mid)
