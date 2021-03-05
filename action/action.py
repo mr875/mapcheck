@@ -19,7 +19,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09):
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=10# set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
+        brk=3# set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
         start=0 # set to 0 for no action. if 10 then line number 10 gets done
         self.dbact_om = open('dbact_om_' + self.ts + '_' + tabname + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '_' + tabname + '.sql',"w")
