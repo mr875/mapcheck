@@ -62,7 +62,7 @@ class No38Pos_09:
                 posaction = 0
                 if brpos_mis:
                     if brpos_hit:
-                        print('br map table has coords for %s that do not match with dbsnp %s (%s), but also coords that do (%s). Correcting the non matching coordinates in map table\n' % (brid,b38,','.join(brpos_mis),','.join(brpos_hit)))
+                        report.write('br map table has coords for %s that do not match with dbsnp %s (%s), but also coords that do (%s). Correcting the non matching coordinates in map table\n' % (brid,b38,','.join(brpos_mis),','.join(brpos_hit)))
                     else:
                         report.write('br map table coords for %s (%s) do not match dbsnp coord (%s). Correcting the coordinates in map table\n' % (brid,','.join(brpos_mis),b38))
                     for mis in brpos_mis:
