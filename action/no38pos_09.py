@@ -3,6 +3,12 @@ import re
 
 # py fileproc.py out_files_corexome/out_sh/out_no38pos_rs.txt coreexome_map
 # py fileproc.py out_files_msex/out_sh/out_no38pos_rs.txt msexome_map
+# py fileproc.py out_files_omni/out_sh/out_no38pos_rs.txt omniexpress_map
+# py fileproc.py out_files_humanexome/out_sh/out_no38pos_rs.txt humanexome_map
+
+# py fileproc.py out_files_infimun/out_sh/out_no38pos_rs.txt infiniumimmunoarray_map
+# py fileproc.py out_files_omni21/out_sh/out_no38pos_rs.txt omniexpress_v2_1_map
+# py fileproc.py out_files_ukbb2_1/out_sh/out_no38pos_rs.txt ukbbaffy_v2_1_map
 
 class No38Pos_09:
 # variant found in db but no b38 position available
@@ -90,12 +96,12 @@ class No38Pos_09:
             print('map table id %s is merged into multiple (%s) according to dbsnp lookup. No action yet' % (brid,'/'.join(becomes)))
             return
         mrgid = becomes[0]
-        print('map table id %s merged to %s. correcting map table (%s -> %s)\n' % (brid,mrgid,brid,mrgid))
+        report.write('map table id %s merged to %s. correcting map table (%s -> %s)\n' % (brid,mrgid,brid,mrgid))
         self.mtab_change_id(xsting=brid,chngto=mrgid)
         mrgid_knwn = self.checkomid(cid=mrgid) 
         if mrgid_knwn[0]:
             report.write('mid %s is merged in dbsnp to %s, but %s already exists in consensus table. Adding as alternative id instead\n' % (mid,mrgid,mrgid))
             self.add_alt(alt=mrgid,main=mid,ds='dbsnp')
         else:
-            report.write('mid %s is merged in dbsnp to %s. Swapping out %s and swapping in %s\n' % (mid,mrgid,mid,mrgid))
+            print('mid %s is merged in dbsnp to %s. Swapping out %s and swapping in %s\n' % (mid,mrgid,mid,mrgid))
             self.swapout_main(swin=mrgid,swout=mid,ds='dbsnp')               
