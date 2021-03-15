@@ -51,7 +51,7 @@ class No38Pos_09:
                     report.write('mid: %s. No dbsnp lookup available. map table pos (from file) %s is present in omics as build 37 however (%s). No action because map table may not have b38 coordinates\n' % (mid,brtab_pos,' & '.join(ompos37)))
                 else:
                     if brtab_pos in ompos:
-                        print('mid %s. No dbsnp lookup available. map table pos (from file) %s was due to be added to omics under build 38 but it appears to exist already (%s). No action\n' % (mid,brtab_pos,' & '.join(ompos)))
+                        report.write('mid %s. No dbsnp lookup available. map table pos (from file) %s was due to be added to omics under build 38 but it appears to exist already (%s). No action\n' % (mid,brtab_pos,' & '.join(ompos)))
                     else:
                         if brtab_pos != '0:0':
                             report.write('mid: %s. No dbsnp lookup available. map table pos (from file) %s to be added to omics under build 38\n' % (mid,brtab_pos))
@@ -84,7 +84,7 @@ class No38Pos_09:
                     self.addpos(mid,chrpos=b38,ds='dbsnp',build='38')
                     posaction += 1
                 if posaction == 0:
-                    print('no position-based action done on %s' % (mid))
+                    report.write('no position-based action done on %s' % (mid))
             if becomes:
                 self.dbsnp_merge(becomes,mid,brid,report)
         print('Done. %s seconds' % (int(timeit.default_timer() - self.grandstart)))
