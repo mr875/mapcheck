@@ -1,3 +1,4 @@
+from .omrs_13 import OmRs_13
 from .newrs_07 import NewRs_07
 from .newaltrs_05 import NewAltRs_05
 from .newposmism_06 import NewPosMisM_06
@@ -9,7 +10,7 @@ import os
 import re
 from utils.queryfile import QueryFile, NormFile
 
-class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09):
+class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_13):
 
     def __init__(self,fname,tabname,omics,br,reportmode=True):
         self.inp = NormFile(fname)
@@ -48,6 +49,8 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09):
                 self.no38pos(brk=brk,start=start)
             else:
                 sys.exit("for file \"%s\" there should be an equivalent with dbsnp look up (%s %s -> %s)" % (self.inp.bfile,'map_no38pos.txt',self.inp.bfile,'out_no38pos_rs.txt'))
+        if 'rsomics' in self.inp.bfile:
+            self.omrs(brk=brk,start=start)
         self.dbact_om.close()
         self.dbact_br.close()
 
