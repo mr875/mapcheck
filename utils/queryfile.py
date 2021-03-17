@@ -10,7 +10,11 @@ class QueryFile:
         self.vals = vals
         self.db = db
         self.row_count = 0
-        self._makeF()   #put back for file generation
+        if not os.path.isfile(bfile): 
+            print('making',bfile)
+            self._makeF() 
+        else:
+            print('query file %s already created, using existing file' % (bfile))
 
     def _makeF(self):
         try:
