@@ -38,7 +38,7 @@ class QueryFile:
     def read(self):
         with open(self.bfile) as f:
             for line in f:
-                yield line
+                yield line.rstrip('\n')
 
     def readls(self,dlim="\t"):
         with open(self.bfile) as f:
