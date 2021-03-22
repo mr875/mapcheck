@@ -60,19 +60,18 @@ class FlankErr:
                     mapts_fltrd.append(mt)
                     mapwhere.append(where)
                     mapval.append(val)
-            #print(mapts_fltrd,mapwhere,mapval)
             if not len(mapwhere) == len(mapval) == len(mapts_fltrd):
                 raise Exception('lists mapwhere, mapval, mapts_fltrd should be the same size',mapwhere, mapval,mapts_fltrd)
             for ind,where in enumerate(mapwhere):
                 self.printq(mapts_fltrd[ind],where,mapval[ind])
-            if cnt > 3:
-                break
+            #if cnt > 10:
+             #   break
+            
     def printq(self,maptable,where,vals):
         vals = ('flank_error',) + vals
         where = where.replace('%s','\'%s\'')
-        full = 'UPDATE ' + maptable + ' SET chr = \'%s\' ' + where + '\n'
+        full = 'UPDATE ' + maptable + ' SET chr = \'%s\' ' + where + ';\n'
         self.sqlout.write(full % vals)
-        print(full % vals)
         
 class ChrPend(FlankErr):
     
@@ -83,27 +82,30 @@ class ChrPend(FlankErr):
     def get_dstomapt(self,mid):
         allds = LinkID.get_positions_ds(mid,self.omcurs)
         nchose_ds = [var[0] for var in allds if var[1] == 0]
-        print(mid,nchose_ds)
         mapts = []
         for ds in nchose_ds:
             if ds == '114':
                 print('datasource DIL Taqman (114) for %s ignored' % (mid))
                 continue
-            if ds == 'ext':
-                raise Exception('datasource %s for %s should not have a flank error\n' % (ds,mid))
+            if ds == 'dbsnp':
+                logmess = 'mid %s has unresolved chr:pos despite a dbsnp entry (%s)'
+                vals = (mid,','.join(nchose_ds))
+                print(logmess % vals)
+                self.sqlout.write('-- '+logmess % vals)
+                self.sqlout.write('\n')
+                continue
             mapts.extend(LinkID.anotds_to_mapt(ds))
         return mapts
 
     def printq(self,maptable,where,vals):
         vals = ('pending',) + vals
         where = where.replace('%s','\'%s\'')
-        full = 'UPDATE ' + maptable + ' SET chr = \'%s\' ' + where + '\n'
+        full = 'UPDATE ' + maptable + ' SET chr = \'%s\' ' + where + ';\n'
         self.sqlout.write(full % vals)
-        print(full % vals)
 
 def main(argv):
-    #FlankErr(argv)
-    ChrPend(argv)
+    FlankErr(argv)
+    #ChrPend(argv)
 
 
 if __name__ == "__main__":

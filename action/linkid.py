@@ -29,7 +29,7 @@ class LinkID:
 
     @classmethod
     def anotds_to_mapt(cls,ds):
-        return dsmap.get(ds,ds) # default = ds, because if it's not in the dict then the ds is probably a map table itself
+        return dsmap.get(ds,[ds]) # default = ds, because if it's not in the dict then the ds is probably a map table itself
 
     @classmethod
     def where_col(cls,mid,maptable,brcurs):
@@ -47,7 +47,6 @@ class LinkID:
             where = ' WHERE ' + mt_col + ' = %s'
             val = (mid,)
             q = 'SELECT ' + mt_col + ',' + rs_col + ',chr FROM ' + maptable + where
-            print(q % val)
             brcurs.execute(q,val)
             res = brcurs.fetchall()
             colwithid = mt_col
