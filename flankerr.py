@@ -13,7 +13,9 @@ def loadConf():
 class FlankErr: 
     
     qry = 'select distinct id from flank where id in (select id from flank group by id having sum(chosen) > 0)'
+    qvals = ()
     qfname = 'flankerr_out.txt'
+    of = OutFiles('out_files')
 
     def __init__(self, argv):
         dbmap = loadConf()
@@ -21,27 +23,33 @@ class FlankErr:
         self.omcurs = omics.getCursor()
         br = DBConnect(dbmap['br'])
         self.brcurs = br.getCursor()
-        queryout = QueryFile(self.qfname,self.qry,db=dbmap['omics'])
+        queryout = QueryFile(self.qfname,self.qry,vals=self.qvals,db=dbmap['omics'])
+        self.sqlout = self.of.new('out_' + self.__class__.__name__.lower() + '.sql')
         try:
             self.action_file(queryout)
         finally:
+            self.of.closeall()
             omics.close()
             br.close()
+
+    def get_dstomapt(self,mid):
+        allds = LinkID.get_flank_ds(mid,self.omcurs)
+        nchose_ds = [var[0] for var in allds if var[1] == 0]
+        mapts = []
+        for ds in nchose_ds:
+            if ds == '114':
+                print('datasource DIL Taqman (114) for %s ignored' % (mid))
+                continue
+            if ds == 'ext':
+                raise Exception('datasource %s for %s should not have a flank error\n' % (ds,mid))
+            mapts.extend(LinkID.anotds_to_mapt(ds))
+        return mapts
 
     def action_file(self,queryout):
         cnt = 0
         for mid in queryout.read():
             cnt += 1
-            allds = LinkID.get_flank_ds(mid,self.omcurs)
-            nchose_ds = [var[0] for var in allds if var[1] == 0]
-            mapts = []
-            for ds in nchose_ds:
-                if ds == '114':
-                    print('datasource DIL Taqman (114) for %s ignored' % (mid))
-                    continue
-                if ds == 'ext':
-                    raise Exception('datasource %s for %s should not have a flank error\n' % (ds,mid))
-                mapts.extend(LinkID.anotds_to_mapt(ds))
+            mapts = self.get_dstomapt(mid)
             #print(mapts)
             mapwhere = []
             mapval = []
@@ -56,13 +64,47 @@ class FlankErr:
             if not len(mapwhere) == len(mapval) == len(mapts_fltrd):
                 raise Exception('lists mapwhere, mapval, mapts_fltrd should be the same size',mapwhere, mapval,mapts_fltrd)
             for ind,where in enumerate(mapwhere):
-                full = 'UPDATE ' + mapts_fltrd[ind] + ' SET ... ' + where 
-                print(full % mapval[ind])
+                self.printq(mapts_fltrd[ind],where,mapval[ind])
             if cnt > 3:
                 break
+    def printq(self,maptable,where,vals):
+        vals = ('flank_error',) + vals
+        where = where.replace('%s','\'%s\'')
+        full = 'UPDATE ' + maptable + ' SET chr = \'%s\' ' + where + '\n'
+        self.sqlout.write(full % vals)
+        print(full % vals)
+        
+class ChrPend(FlankErr):
+    
+    qry = 'SELECT id FROM positions where build = %s and chosen = %s and CONCAT(chr,\':\',pos) <> %s group by id,chosen having count(chosen) > 1'
+    qvals = ('38',0,'0:0')
+    qfname = 'chrpend_out.txt'
+
+    def get_dstomapt(self,mid):
+        allds = LinkID.get_positions_ds(mid,self.omcurs)
+        nchose_ds = [var[0] for var in allds if var[1] == 0]
+        print(mid,nchose_ds)
+        mapts = []
+        for ds in nchose_ds:
+            if ds == '114':
+                print('datasource DIL Taqman (114) for %s ignored' % (mid))
+                continue
+            if ds == 'ext':
+                raise Exception('datasource %s for %s should not have a flank error\n' % (ds,mid))
+            mapts.extend(LinkID.anotds_to_mapt(ds))
+        return mapts
+
+    def printq(self,maptable,where,vals):
+        vals = ('pending',) + vals
+        where = where.replace('%s','\'%s\'')
+        full = 'UPDATE ' + maptable + ' SET chr = \'%s\' ' + where + '\n'
+        self.sqlout.write(full % vals)
+        print(full % vals)
 
 def main(argv):
-    FlankErr(argv)
+    #FlankErr(argv)
+    ChrPend(argv)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

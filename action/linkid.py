@@ -21,6 +21,13 @@ class LinkID:
         return ls
 
     @classmethod
+    def get_positions_ds(cls,mid,omcurs):
+        qry = 'SELECT datasource, chosen FROM positions WHERE id = %s'
+        omcurs.execute(qry,(mid,))
+        ls = omcurs.fetchall()
+        return ls
+
+    @classmethod
     def anotds_to_mapt(cls,ds):
         return dsmap.get(ds,ds) # default = ds, because if it's not in the dict then the ds is probably a map table itself
 
@@ -40,6 +47,7 @@ class LinkID:
             where = ' WHERE ' + mt_col + ' = %s'
             val = (mid,)
             q = 'SELECT ' + mt_col + ',' + rs_col + ',chr FROM ' + maptable + where
+            print(q % val)
             brcurs.execute(q,val)
             res = brcurs.fetchall()
             colwithid = mt_col
