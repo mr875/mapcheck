@@ -32,9 +32,12 @@ def main():
 #    om21.add_file()
 #    om21.step('chip_comp',0)
 #    ukb21 = ukb('ukbbaffy_v2_1_map').table_dump()
-    ukb21 = ukb('ukbbaffy_v2_1_map')
-    ukb21.add_file()
-    ukb21.step('chip_comp',363835)
+#    ukb21 = ukb('ukbbaffy_v2_1_map')
+#    ukb21.add_file()
+#    ukb21.step('chip_comp',363835)
+# should be possible now:
+#    ukb21 = ukb('ukbbaffy_v2_1_map','ukbb2_1_map_0121.txt')
+
 
 if __name__ == "__main__":
     main()

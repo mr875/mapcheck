@@ -10,10 +10,13 @@ class MapTable:
     omcurs = None
     qf = None #for QueryFile instance
 
-    def __init__(self,tabname):
+    def __init__(self,tabname,filename=None):
         if tabname in self.tabcols:
             self.tabname = tabname
-            self.fname = 'out_' + self.tabname + '.txt'
+            if not filename:
+                self.fname = 'out_' + self.tabname + '.txt'
+            else:
+                self.fname = filename
         else:
             sys.exit("table name passed is '%s' but this name is not recognised for class '%s'" % (tabname,self.__class__.__name__))
 
