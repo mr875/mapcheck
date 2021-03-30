@@ -36,8 +36,9 @@ def main():
 #    ukb21.add_file()
 #    ukb21.step('chip_comp',363835)
 # should be possible now:
-#    ukb21 = ukb('ukbbaffy_v2_1_map','ukbb2_1_map_0121.txt')
-
+    ukb21 = ukb('ukbbaffy_v2_1_map','ukbb2_1_map_0121.txt')
+    ukb21.add_file()
+    ukb21.step('cc2',start=0,finish=None)
 
 if __name__ == "__main__":
     main()

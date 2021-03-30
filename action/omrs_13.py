@@ -18,5 +18,11 @@ class OmRs_13:
             mapid,omrs = re.split('\t',linesplit[0])
             mapid = re.split('=',mapid)[1]
             omrs = re.split('=',omrs)[1]
-            print(mapid,omrs,linesplit[1])
+            mgchk = self.mergecheck(linesplit[1])
+            merges = mgchk['merges']
+            becomes = self.mergedinto(evenarr=merges,potbef=omrs)
+            stillmain = self.stillmain(omrs)
+            mrgid = None
+            if becomes: #omrs is merged to newer one
+
         report.close()
