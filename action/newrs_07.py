@@ -7,6 +7,8 @@ import re
 # py fileproc.py out_files_msex/out_sh/out_new_rs_rs.txt msexome_map
 
 # suggested change since flankerr.py creation: oldbrpos = [op for op in getbrpos[1] if op != '0:0' and op != 'pending' and op != 'flank_error']
+#omrs_13.py is the first one to be done after flankerr.py
+
 class NewRs_07:
 # map table rsid not known to db, map table non-rsid in db consensus instead
 # related (newrsbyalt): map table rsid not known to db, map table non-rsid in db alt_ids instead
