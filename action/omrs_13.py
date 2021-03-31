@@ -42,6 +42,31 @@ class OmRs_13:
                     print('can not get dbsnp b38 position for new merge id %s (from %s). Adding as alternate id instead to omics, not adding to map table id %s' % (mrgid,omrs,mapid))
                     self.add_alt(alt=mrgid,main=omrs,ds='dbsnp')
                 continue
-            if '_' in b38:
-                pass
+            contig = False
+            if '_' in b38: # can't edit chr:pos fields
+                print('dbsnp coord is a contig reference for omics rs %s (or merge %s). Can not update position fields. map id %s\n' % (omrs,mrgid,mapid))
+                contig = True
+            getbrpos = self.checkbr_pos(mapid,b38)
+            getompos = self.checkom_pos(omrs,chrpos=b38,build='38')
+            if not getbrpos[0] and not contig:
+                oldbrpos = [op for op in getbrpos[1] if op != '0:0' and op != 'pending' and op != 'flank_error']
+                if len(oldbrpos) < 1:
+                    report.write('map id %s, omics rs %s, possible merge %s. map table position not for changing/updating: %s\n' % (mapid,omrs,mrgid,','.join(getbrpos[1])))
+                for op in oldbrpos:
+                    print('map id %s, omics rs %s, possible merge %s. map position do not match dbsnp position (%s vs %s). Action: correct position in map table\n' % (mapid,omrs,mrgid,op,b38))
+                    self.mtab_change_pos(anid=mapid,oldpos=op,newpos=b38)
+            if not getompos[0] and not contig:
+                print('omics rs id %s, possible merge %s, map table id %s, dbsnp position is unknown to omics, so adding it and flagging not matches (unless 0:0).\n' % (omrs,mrgid,mapid))                
+                badom = [bp for bp in getompos[1] if bp != '0:0']
+                self.addpos(omrs,chrpos=b38,ds='dbsnp',build='38')
+                for bp in badom:
+                    self.pos_flag(omrs,chrpos=bp,fl=-5)
+            idin = omrs
+            if mrgid:
+                idin = mrgid
+                print('omics rs %s due to be added to map table id %s but according to dbsnp it is merged to %s. So merged %s will be added to map table id %s and also swapped into omics db for %s\n' % (omrs,mapid,mrgid,mrgid,mapid,omrs))
+                self.swapout_main(swin=mrgid,swout=omrs,ds='dbsnp')               
+            else:
+                print('omics rs %s to be added to map table id %s\n' % (omrs,mapid))
+            self.mtab_change_id(xsting=mapid,chngto=idin) # NEED NEW METHOD TO PUT IN VS SWITCH
         report.close()
