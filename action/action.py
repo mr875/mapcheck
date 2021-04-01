@@ -20,12 +20,13 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         self.tabname = tabname
         self.reportmode = reportmode
         self.make_extra_map_table()
-        brk=10 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
+        brk=0 # set to 0 for whole file # if 20 then line number 19 gets done, line 20 does not
         start=0 # set to 0 for no action. if 10 then line number 10 gets done
         self.dbact_om = open('dbact_om_' + self.ts + '_' + tabname + '.sql',"w")
         self.dbact_br = open('dbact_br_' + self.ts + '_' + tabname + '.sql',"w")
         self.actbr_poschng = set()
         self.actbr_idchng = set()
+        self.ignorepos = ['flank_error','pending']
         if 'map_new_alt_rs' in self.inp.bfile:
             if 'out' in os.path.basename(self.inp.bfile):
                 self.newaltrs(brk=brk,start=start)
@@ -141,7 +142,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
             e = sys.exc_info()
             self.dbact_om.write( "-- Error trying to insert %s as alt id to %s\t%s\n" % (alt_id,main,e))
 
-    def mtab_change_id(self,xsting,chngto):
+    def mtab_change_id(self,xsting,chngto,dbsnpin=False): # also for adding (vs replacing) new dbsnp id
         if xsting in self.actbr_idchng:
             print('entered mtab_change_id to change %s to %s but id %s has been edited already in this session' % (xsting,chngto,xsting))
             return
@@ -151,6 +152,8 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
             mid_col = 'snp'
         where,val,colwithid,res = self.mtab_get_where_string(xsting)
         where = where.replace('%s','\'%s\'') + ';\n'
+        if dbsnpin: # if unknown dbsnp id to be inserted instead of replaced (xsting mid maintained)
+            colwithid = 'dbsnpid'
         if colwithid != mid_col:
             res = [rs[1] for rs in res]
             rs_ls = []
@@ -196,6 +199,8 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         if anid in self.actbr_poschng:
             print('entered mtab_change_pos but id %s has been edited already in this session' % (anid))
             return
+        if oldpos in self.ignorepos or newpos in self.ignorepos:
+            raise ValueError("ProcFile.mtab_change_pos(...) called to change map table %s position from %s to %s. Update to ignore %s needed" % (anid,oldpos,newpos,' and '.join(self.ignorepos)))
         where,val,rscol,res = self.mtab_get_where_string(anid)
         q = 'UPDATE ' + self.tabname + ' SET chr = %s ' + where + ' AND chr = %s'
         val = (newpos,) + val + (oldpos,)
@@ -208,7 +213,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
 
     def swapout_main(self,swin,swout,ds):
         if self.reportmode:
-            return
+            return True
         q = 'SELECT uid_datasource FROM consensus WHERE id = %s'
         val = (swout,)
         self.omics.execute(q,val)
@@ -217,7 +222,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         if len(res) != 1:
             val = (swin,swout) + val
             self.dbact_om.write(('-- failed to swap in %s for %s because it may have been swapped already: ' + q + ';\n') % val)
-            return
+            return False
         swout_ds = res[0]
         try:
             vals = (swin,ds,swout)
@@ -243,6 +248,8 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
             e = sys.exc_info()
             self.dbact_om.write( "Error trying to swap in %s for %s: %s:\n" % (swin,swout,e))
             self.swapout_main_write(swin,swout,ds,swout_ds)
+            return False
+        return True
 
     def swapout_main_write(self,swin,swout,ds,swout_ds):
         self.dbact_om.write('UPDATE consensus SET id = \'%s\', uid_datasource = \'%s\' WHERE id = \'%s\';\n' % (swin,ds,swout))
@@ -258,12 +265,16 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         if self.reportmode:
             return
         vals = (fl,mid,'38',chrpos,-1)
+        if chrpos in self.ignorepos:
+            raise ValueError("FileProc.pos_flag(...) entered with chr:pos value %s" % (chrpos))
         q = 'UPDATE positions SET chosen = %s WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s AND chosen > %s'
         self.omics.execute(q,vals)
 
     def addpos(self,mid,chrpos,ds,build='38'):
         if self.reportmode:
             return
+        if chrpos in self.ignorepos:
+            raise ValueError("entered ProcFile.addpos(...) with chr:pos %s. Update required to ignore these strings" % (chrpos))
         q = 'SELECT * FROM positions WHERE id = %s AND build = %s AND CONCAT(chr,":",pos) = %s'
         vals = (mid,build,chrpos)
         self.omics.execute(q,vals)
@@ -339,6 +350,22 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         self.omics.execute(q,val)
         altyesno = self.omics.fetchone()[0]
         return [conyesno,altyesno] # [known as main id, known at alternative id]
+
+    def altomain(self,tobemain,oldmain):
+        q = 'SELECT datasource FROM alt_ids WHERE alt_id = %s AND id = %s'
+        vals = (tobemain,oldmain)
+        self.omics.execute(q,vals)
+        tobeds = [row[0] for row in self.omics.fetchall()]
+        q = 'SELECT uid_datasource FROM consensus WHERE id = %s'
+        vals = (oldmain,)
+        self.omics.execute(q,vals)
+        oldmds = [colo for colo in self.omics.fetchone()]
+        print(tobeds,oldmds)
+        if len(tobeds) != 1 or len(oldmds) != 1:
+            return False
+        #self.swapout_main(swin=tobemain,swout=oldmain,ds=tobeds)
+        #delete from alt_ids where id = tobemain and alt_id = tobemain and datasource = tobeds
+        return True
 
     def extra_map(self,newid,linkid,chrpos,datasource,chosen,ds_chrpos=None):
         if self.reportmode:
