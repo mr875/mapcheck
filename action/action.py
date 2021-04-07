@@ -246,7 +246,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
             self.omics.execute(q,vals)
         except:
             e = sys.exc_info()
-            self.dbact_om.write( "Error trying to swap in %s for %s: %s:\n" % (swin,swout,e))
+            self.dbact_om.write( "Error trying to swap in %s for %s: %s:\nPartial write may have happened\n" % (swin,swout,e))
             self.swapout_main_write(swin,swout,ds,swout_ds)
             return False
         return True
@@ -360,12 +360,16 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         vals = (oldmain,)
         self.omics.execute(q,vals)
         oldmds = [colo for colo in self.omics.fetchone()]
-        print(tobeds,oldmds)
         if len(tobeds) != 1 or len(oldmds) != 1:
             return False
-        #self.swapout_main(swin=tobemain,swout=oldmain,ds=tobeds)
-        #delete from alt_ids where id = tobemain and alt_id = tobemain and datasource = tobeds
-        return True
+        success = self.swapout_main(swin=tobemain,swout=oldmain,ds=tobeds)
+        print(tobeds,oldmds,success)
+        if success:
+            q = 'DELETE FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s'
+            vals = (tobemain,oldmain,tobeds)
+            if not self.reportmode:
+                self.omics.execute(q,vals)
+        return success
 
     def extra_map(self,newid,linkid,chrpos,datasource,chosen,ds_chrpos=None):
         if self.reportmode:
