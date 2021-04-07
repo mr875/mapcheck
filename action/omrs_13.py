@@ -34,7 +34,10 @@ class OmRs_13:
                 if mrgid_knwn[1]:
                     print('new merged id %s (from %s) is already known as alt id. If main id is %s then they can be swapped\n' % (mrgid,omrs,omrs))
                     altomain = self.altomain(tobemain=mrgid,oldmain=omrs) # True or False. if true use new merge id, if false, skip/continue
-                    continue
+                    if altomain: # if self.reportmode then no changes will have taken place 
+                        omrs = mrgid
+                        mrgid = None
+                    continue # put in else
             b38 = self.getb38(linesplit[1])
             if not b38:
                 if not mrgid:
