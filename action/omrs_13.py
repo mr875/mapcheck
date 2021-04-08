@@ -25,6 +25,7 @@ class OmRs_13:
             merges = mgchk['merges']
             becomes = self.mergedinto(evenarr=merges,potbef=omrs)
             mrgid = None
+            altomain_ds = False 
             if becomes: #omrs is merged to newer one
                 mrgid = becomes[0]
                 mrgid_knwn = self.checkomid(cid=mrgid) # is the mrgid known? returns [conyesno,altyesno]
@@ -32,12 +33,10 @@ class OmRs_13:
                     print('new merged id %s (from %s) is already known as consensus id. No action\n' % (mrgid,omrs))
                     continue
                 if mrgid_knwn[1]:
-                    print('new merged id %s (from %s) is already known as alt id. If main id is %s then they can be swapped\n' % (mrgid,omrs,omrs))
-                    altomain = self.altomain(tobemain=mrgid,oldmain=omrs) # True or False. if true use new merge id, if false, skip/continue
-                    if altomain: # if self.reportmode then no changes will have taken place 
-                        omrs = mrgid
-                        mrgid = None
-                    continue # put in else
+                    altomain_ds = self.altomain_check(tobemain=mrgid,oldmain=omrs) # Will contain ds of new merge id if it is an alt_id TO the current main id. if it exists will do alt-main switch later, if None, skip/continue
+                    if not altomain_ds:
+                        print('new merged id %s (from %s) is already known as alt_id to a different main id. No action\n' % (mrgid,omrs))
+                        continue 
             b38 = self.getb38(linesplit[1])
             if not b38:
                 if not mrgid:
@@ -68,7 +67,11 @@ class OmRs_13:
             idin = omrs
             if mrgid:
                 idin = mrgid
-                report.write('omics rs %s due to be added to map table id %s but according to dbsnp it is merged to %s. So merged %s will be added to map table id %s and also swapped into omics db for %s\n' % (omrs,mapid,mrgid,mrgid,mapid,omrs))
-                self.swapout_main(swin=mrgid,swout=omrs,ds='dbsnp')               
+                if altomain_ds:
+                    print('new merged id %s (from %s) is already known as alt id TO the main id %s. Attempting alt_id to main id swap\n' % (mrgid,omrs,omrs))
+                    self.altomain(tobemain=mrgid,oldmain=omrs,tobeds=altomain_ds)
+                else:
+                    report.write('omics rs %s due to be added to map table id %s but according to dbsnp it is merged to %s. So merged %s will be added to map table id %s and also swapped into omics db for %s\n' % (omrs,mapid,mrgid,mrgid,mapid,omrs))
+                    self.swapout_main(swin=mrgid,swout=omrs,ds='dbsnp')               
             self.mtab_change_id(xsting=mapid,chngto=idin,dbsnpin=True) 
         report.close()

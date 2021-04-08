@@ -351,7 +351,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         altyesno = self.omics.fetchone()[0]
         return [conyesno,altyesno] # [known as main id, known at alternative id]
 
-    def altomain(self,tobemain,oldmain):
+    def altomain_check(self,tobemain,oldmain):
         q = 'SELECT datasource FROM alt_ids WHERE alt_id = %s AND id = %s'
         vals = (tobemain,oldmain)
         self.omics.execute(q,vals)
@@ -361,9 +361,15 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         self.omics.execute(q,vals)
         oldmds = [colo for colo in self.omics.fetchone()]
         if len(tobeds) != 1 or len(oldmds) != 1:
+            return None
+        return tobeds[0]
+
+    def altomain(self,tobemain,oldmain,tobeds=None):
+        if not tobeds:
+            tobeds = self.altomain_check(tobemain,oldmain)
+        if not tobeds:
             return False
         success = self.swapout_main(swin=tobemain,swout=oldmain,ds=tobeds)
-        print(tobeds,oldmds,success)
         if success:
             q = 'DELETE FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s'
             vals = (tobemain,oldmain,tobeds)
