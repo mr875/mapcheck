@@ -372,7 +372,7 @@ class ProcFile(NewAltRs_05,NewPosMisM_06,NewRs_07,NewRsbyAlt_08,No38Pos_09,OmRs_
         success = self.swapout_main(swin=tobemain,swout=oldmain,ds=tobeds)
         if success:
             q = 'DELETE FROM alt_ids WHERE id = %s AND alt_id = %s AND datasource = %s'
-            vals = (tobemain,oldmain,tobeds)
+            vals = (tobemain,tobemain,tobeds)
             if not self.reportmode:
                 self.omics.execute(q,vals)
         return success

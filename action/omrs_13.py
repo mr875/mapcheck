@@ -1,5 +1,6 @@
 import re
 # py fileproc.py out_files_corexome/out_sh/out_rsomics_rs.txt coreexome_map 
+# py fileproc.py out_files_msex/out_sh/out_rsomics_rs.txt msexome_map
 
 class OmRs_13:
 
@@ -30,7 +31,8 @@ class OmRs_13:
                 mrgid = becomes[0]
                 mrgid_knwn = self.checkomid(cid=mrgid) # is the mrgid known? returns [conyesno,altyesno]
                 if mrgid_knwn[0]:
-                    print('new merged id %s (from %s) is already known as consensus id. No action\n' % (mrgid,omrs))
+                    report.write('new merged id %s (from %s) is already known as a consensus id. Adding current main id %s as alternative id to existing main id %s. Future merge possible. No further action done.\n' % (mrgid,omrs,omrs,mrgid))
+                    self.add_alt(alt=omrs,main=mrgid,ds='dbsnp')
                     continue
                 if mrgid_knwn[1]:
                     altomain_ds = self.altomain_check(tobemain=mrgid,oldmain=omrs) # Will contain ds of new merge id if it is an alt_id TO the current main id. if it exists will do alt-main switch later, if None, skip/continue
@@ -68,7 +70,7 @@ class OmRs_13:
             if mrgid:
                 idin = mrgid
                 if altomain_ds:
-                    print('new merged id %s (from %s) is already known as alt id TO the main id %s. Attempting alt_id to main id swap\n' % (mrgid,omrs,omrs))
+                    report.write('new merged id %s (from %s) is already known as alt id TO the main id %s. Attempting alt_id to main id swap\n' % (mrgid,omrs,omrs))
                     self.altomain(tobemain=mrgid,oldmain=omrs,tobeds=altomain_ds)
                 else:
                     report.write('omics rs %s due to be added to map table id %s but according to dbsnp it is merged to %s. So merged %s will be added to map table id %s and also swapped into omics db for %s\n' % (omrs,mapid,mrgid,mrgid,mapid,omrs))
