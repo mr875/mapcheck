@@ -1,12 +1,14 @@
 import re
 # py fileproc.py out_files_corexome/out_sh/out_rsomics_rs.txt coreexome_map 
 # py fileproc.py out_files_msex/out_sh/out_rsomics_rs.txt msexome_map
+# py fileproc.py out_files_ukbb2_1_2021/out_sh/out_rsomics_rs.txt ukbbaffy_v2_1_map
 
 class OmRs_13:
 
     def omrs(self,brk=0,start=0):
         report = open('report_omrs_' + self.ts + '_' + self.tabname + '.txt',"w")
         count = 0
+        newerfile = 0
         for line in self.inp.read():
             count+=1
             if brk and count == brk:
@@ -53,6 +55,9 @@ class OmRs_13:
                 contig = True
             getbrpos = self.checkbr_pos(mapid,b38)
             getompos = self.checkom_pos(omrs,chrpos=b38,build='38')
+            if not getbrpos:
+                newerfile += 1
+                continue
             if not getbrpos[0] and not contig:
                 oldbrpos = [op for op in getbrpos[1] if op != '0:0' and op != 'pending' and op != 'flank_error']
                 if len(oldbrpos) < 1:
@@ -76,4 +81,6 @@ class OmRs_13:
                     report.write('omics rs %s due to be added to map table id %s but according to dbsnp it is merged to %s. So merged %s will be added to map table id %s and also swapped into omics db for %s\n' % (omrs,mapid,mrgid,mrgid,mapid,omrs))
                     self.swapout_main(swin=mrgid,swout=omrs,ds='dbsnp')               
             self.mtab_change_id(xsting=mapid,chngto=idin,dbsnpin=True) 
+        if newerfile: 
+            report.write('omics rs id or map table id could not be found in map table %s times. You are probably using a file not originally created directly from the map table.\n' % (newerfile))
         report.close()
